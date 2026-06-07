@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-background: hsl(42 50% 96%);
+  --color-foreground: hsl(35 53% 7%);
+  
+  --color-primary: hsl(339 55% 46%);
+  --color-primary-foreground: hsl(42 50% 96%);
+  
+  --color-brand: hsl(47 86% 69%);
+  
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(35 53% 7%);
+  
+  --color-border: hsl(37 22% 90%);
+  --color-input: hsl(37 22% 90%);
+  --color-ring: hsl(339 55% 46%);
+  
+  --color-muted: hsl(35 44% 93%);
+  --color-muted-foreground: hsl(30 15% 42%);
+  
+  --radius-lg: 0.625rem;
+  --radius-md: calc(0.625rem - 2px);
+  --radius-sm: calc(0.625rem - 4px);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 42 50% 96%;
+    --foreground: 35 53% 7%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Soft background gradient from Business Manager */
+    background-image: radial-gradient(ellipse at 85% 8%, rgba(74,14,36,0.04) 0%, transparent 55%),
+                      radial-gradient(ellipse at 10% 90%, rgba(74,14,36,0.025) 0%, transparent 45%);
+  }
+
+  * {
+    border-color: var(--color-border);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
