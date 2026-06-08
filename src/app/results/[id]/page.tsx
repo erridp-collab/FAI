@@ -32,6 +32,17 @@ export default function ResultsPage() {
   useEffect(() => {
     if (!responseId) return;
 
+    if (responseId === "__dev__") {
+      const raw = sessionStorage.getItem("fai_dev_results");
+      if (raw) {
+        setData(JSON.parse(raw));
+      } else {
+        setError("Nessun risultato dev trovato. Completa il questionario in modalità dev.");
+      }
+      setIsLoading(false);
+      return;
+    }
+
     supabase
       .from("fai_responses")
       .select("*")

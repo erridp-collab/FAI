@@ -1,58 +1,123 @@
 import Link from "next/link";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center w-full px-4 sm:px-6 animate-fade-in-up">
-      <div className="max-w-3xl w-full text-center space-y-8">
-        
-        {/* Header Text */}
-        <div className="space-y-4">
-          <div className="inline-block px-4 py-1.5 rounded-full border border-border/50 bg-white/50 backdrop-blur-sm text-sm font-medium text-muted-foreground shadow-sm">
-            Diagnosi Gratuita in 10 minuti
+    <div className="min-h-screen bg-canvas text-primary">
+      <div className="max-w-3xl mx-auto px-6 py-16 space-y-20">
+
+        {/* Hero */}
+        <section className="text-center space-y-6">
+          <div className="inline-block px-4 py-1.5 rounded-full border border-accent/40 bg-accent/10 text-accent-surface text-sm font-medium tracking-wide">
+            Diagnosi per microimprese
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">
-            Quanto è solida la tua <span className="text-primary">attività</span>?
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+            Quanto è solida<br />
+            <span className="text-accent-surface">la tua attività?</span>
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Non è un esame: è una diagnosi onesta basata sui tuoi dati, costruita su misura per le piccole imprese. Scopri punti di forza ed eventuali aree esposte.
+          <p className="text-secondary text-lg max-w-xl mx-auto leading-relaxed">
+            Ti dice quanto regge la tua attività se qualcosa cambia o va male. Non è un esame: è una diagnosi onesta basata sui tuoi dati, costruita su misura per le piccole imprese.
           </p>
-        </div>
+        </section>
 
-        {/* Selection Area */}
-        <div className="pt-8">
-          <h2 className="text-lg font-semibold text-foreground mb-6">Per iniziare, che tipo di attività gestisci?</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            {/* Card Commercio */}
-            <Link 
-              href="/questionnaire?type=commercio"
-              className="group relative flex flex-col items-center justify-center p-8 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="w-16 h-16 rounded-full bg-brand/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              </div>
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">Commercio</h3>
-              <p className="text-sm text-muted-foreground mt-2">Negozi, botteghe, retail e vendita diretta</p>
-            </Link>
+        {/* Per chi */}
+        <section className="bg-surface border border-raised rounded-2xl p-8 space-y-3">
+          <h2 className="text-xs font-semibold text-accent-surface uppercase tracking-wider">Per chi</h2>
+          <p className="text-primary leading-relaxed">
+            Per te che gestisci un'attività — qualsiasi attività. Un B&B, una casa vacanze, un ristorante, una bottega, un agriturismo, un negozio, un servizio collegato in maniera diretta o indiretta con il turismo.
+          </p>
+          <p className="text-secondary text-sm">
+            Non serve esperienza tecnica: se conosci la tua attività, puoi compilarlo.
+          </p>
+        </section>
 
-            {/* Card Ricettività */}
-            <Link 
-              href="/questionnaire?type=ricettivita"
-              className="group relative flex flex-col items-center justify-center p-8 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="w-16 h-16 rounded-full bg-brand/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+        {/* Come funziona */}
+        <section className="space-y-6">
+          <h2 className="text-xs font-semibold text-accent-surface uppercase tracking-wider">Come funziona</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                step: "01",
+                title: "Prima di iniziare",
+                desc: "7 domande su come ti senti rispetto alla tua attività. Circa 5 minuti.",
+              },
+              {
+                step: "02",
+                title: "La tua realtà",
+                desc: "33 domande su 7 aree chiave della tua attività. Circa 10–15 minuti.",
+              },
+              {
+                step: "03",
+                title: "I risultati",
+                desc: "Lo spider web dei tuoi punteggi subito. Il report completo via email entro 3 giorni lavorativi.",
+              },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="bg-surface rounded-2xl p-6 border border-raised space-y-3">
+                <div className="text-3xl font-bold text-accent-surface/30">{step}</div>
+                <h3 className="font-semibold text-primary">{title}</h3>
+                <p className="text-secondary text-sm leading-relaxed">{desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">Attività Ricettive</h3>
-              <p className="text-sm text-muted-foreground mt-2">B&B, case vacanza, hotel, agriturismi</p>
-            </Link>
+            ))}
           </div>
-        </div>
+        </section>
+
+        {/* 7 Aree */}
+        <section className="space-y-4">
+          <h2 className="text-xs font-semibold text-accent-surface uppercase tracking-wider">Le 7 aree analizzate</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              "La tua voce",
+              "I tuoi ricavi",
+              "I tuoi margini",
+              "La tua adattabilità",
+              "Il tuo sistema",
+              "La tua rete",
+              "Il tuo apprendimento",
+            ].map((area) => (
+              <div key={area} className="bg-surface border border-raised rounded-xl px-4 py-3 text-sm text-accent-surface font-medium">
+                {area}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA accesso */}
+        <section className="bg-surface border border-accent/20 rounded-2xl p-8 text-center space-y-4">
+          <h2 className="text-xl font-semibold">Hai già acquistato l'accesso?</h2>
+          <p className="text-secondary text-sm">
+            Usa il link personale ricevuto via email. Ogni link è valido per una sola diagnosi.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-2">
+            <code className="bg-raised text-tertiary text-sm px-4 py-2 rounded-lg">
+              fai-microimpresa.it/start?token=ALVA-XXXXXXXX
+            </code>
+          </div>
+          <p className="text-tertiary text-xs pt-2">
+            Non hai ancora un accesso?{" "}
+            <a href="mailto:info@fai-microimpresa.it" className="text-accent-surface underline underline-offset-2">
+              Contattaci
+            </a>
+          </p>
+        </section>
 
       </div>
+
+      {/* Dev mode — visibile solo in development */}
+      {isDev && (
+        <div className="max-w-3xl mx-auto px-6 pb-16">
+          <div className="border-t border-raised pt-8 text-center">
+            <p className="text-tertiary text-xs mb-3 uppercase tracking-wider">Modalità sviluppo</p>
+            <Link
+              href="/questionnaire?dev=1"
+              className="inline-block px-6 py-3 bg-gold/10 border border-gold/30 text-gold text-sm font-semibold rounded-xl hover:bg-gold/20 transition-colors"
+            >
+              Testa il questionario (dev mode) →
+            </Link>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
-
