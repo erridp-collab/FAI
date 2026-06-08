@@ -1,0 +1,63 @@
+<h2>Quando raccogliamo i dati dell'attività?</h2>
+<p class="subtitle">Nome attività, settore, città + email. Due approcci possibili nel flusso.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#e0f2fe;">A — All'inizio (prima del questionario)</div>
+    <div class="mockup-body">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px;font-size:13px;">
+        <div style="background:#dcfce7;border-radius:6px;padding:8px;text-align:center;">Istruzioni</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#bfdbfe;border-radius:6px;padding:8px;text-align:center;font-weight:600;">📋 Nome / Settore / Città / Email</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#f3f4f6;border-radius:6px;padding:8px;text-align:center;">Prima di iniziare (7+3)</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#f3f4f6;border-radius:6px;padding:8px;text-align:center;">33 domande</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#dcfce7;border-radius:6px;padding:8px;text-align:center;">🕸 Risultati</div>
+      </div>
+      <div style="padding:0 14px 14px;font-size:12px;color:#555;">
+        <strong>Pro:</strong> Sappiamo subito chi è l'utente, possiamo personalizzare il percorso.<br>
+        <strong>Contro:</strong> Attrito all'inizio, prima di aver visto il valore.
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header" style="background:#fef9c3;">B — Alla fine (prima dei risultati)</div>
+    <div class="mockup-body">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px;font-size:13px;">
+        <div style="background:#dcfce7;border-radius:6px;padding:8px;text-align:center;">Istruzioni</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#f3f4f6;border-radius:6px;padding:8px;text-align:center;">Prima di iniziare (7+3)</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#f3f4f6;border-radius:6px;padding:8px;text-align:center;">33 domande</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#fef08a;border-radius:6px;padding:8px;text-align:center;font-weight:600;">📋 Nome / Settore / Città / Email</div>
+        <div style="text-align:center;color:#999;">↓</div>
+        <div style="background:#dcfce7;border-radius:6px;padding:8px;text-align:center;">🕸 Risultati</div>
+      </div>
+      <div style="padding:0 14px 14px;font-size:12px;color:#555;">
+        <strong>Pro:</strong> L'utente ha già investito tempo, è più motivato a lasciare i dati. Conversion più alta.<br>
+        <strong>Contro:</strong> Se abbandona a metà, non abbiamo i suoi dati.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options" style="margin-top:20px;">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>All'inizio</h3>
+      <p>Dati subito, prima di partire con le domande</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Alla fine</h3>
+      <p>Prima il questionario, poi i dati + email per sbloccare i risultati</p>
+    </div>
+  </div>
+</div>

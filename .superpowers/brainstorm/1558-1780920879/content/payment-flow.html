@@ -1,0 +1,30 @@
+<h2>Flusso post-pagamento</h2>
+<p class="subtitle">Dopo che l'utente paga, come accede al questionario?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Paga → inizia subito</h3>
+      <p>Stripe Checkout → redirect immediato al questionario nella stessa sessione. Semplice, nessuna email necessaria. Se chiude il browser perde il progresso.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Paga → link via email</h3>
+      <p>Dopo il pagamento riceve un link unico per email. Può completare il questionario quando vuole, anche da un altro dispositivo. Più robusto, un po' più complesso da costruire.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Prima inserisce email, poi paga, poi inizia subito</h3>
+      <p>Email raccolta prima del pagamento (per recuperare l'ordine in caso di problemi), poi redirect diretto al questionario. Miglior compromesso.</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:13px;">
+  <strong>Nota tecnica:</strong> In tutti i casi usiamo <strong>Stripe</strong> come payment provider (supporta pagamenti italiani/EU, ha webhook per confermare il pagamento lato server).
+</div>

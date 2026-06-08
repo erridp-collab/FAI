@@ -1,0 +1,58 @@
+<h2>"Prima di iniziare" — lo includiamo?</h2>
+<p class="subtitle">L'Excel ha una sezione separata prima del questionario principale. Dobbiamo decidere se metterla nell'app.</p>
+
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+  <h3 style="margin:0 0 12px;">Cosa contiene "Prima di iniziare" nell'Excel</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:14px;">
+      <div class="label">Blocco 1 — Percezione (7 domande)</div>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;color:#555;line-height:1.8;">
+        <li>Hai una storia chiara che ti rende unico?</li>
+        <li>Ti senti tranquillo sui ricavi?</li>
+        <li>Conosci i tuoi numeri?</li>
+        <li>Saresti pronto se qualcosa cambiasse?</li>
+        <li>L'attività andrebbe avanti senza di te?</li>
+        <li>Ti senti parte di una rete?</li>
+        <li>Stai imparando e migliorando?</li>
+      </ul>
+      <div style="margin-top:10px;font-size:12px;color:#888;">→ Usate nel report per confrontare percezione vs realtà</div>
+    </div>
+    <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:14px;">
+      <div class="label">Blocco 2 — Obiettivi (scegli 3)</div>
+      <ul style="margin:8px 0 0;padding-left:18px;font-size:13px;color:#555;line-height:1.8;">
+        <li>Raccontarmi meglio / smettere di competere sul prezzo</li>
+        <li>Diversificare i ricavi</li>
+        <li>Capire i miei numeri davvero</li>
+        <li>Ridurre la dipendenza da me stesso</li>
+        <li>Costruire una rete locale</li>
+        <li>Imparare e sperimentare di più</li>
+        <li>Altro...</li>
+      </ul>
+      <div style="margin-top:10px;font-size:12px;color:#888;">→ Usati per personalizzare le azioni consigliate nel report</div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Includi entrambi i blocchi</h3>
+      <p>5 minuti extra, dati più ricchi per il report completo. Percezione vs realtà è uno dei punti più forti della diagnosi.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Solo obiettivi (Blocco 2)</h3>
+      <p>1 minuto, semplifica l'esperienza. Comunque personalizziamo il report. Saltiamo la parte percezione.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Salta "Prima di iniziare"</h3>
+      <p>Vai diretto alle 33 domande. Massima semplicità, meno personalizzazione nel report.</p>
+    </div>
+  </div>
+</div>

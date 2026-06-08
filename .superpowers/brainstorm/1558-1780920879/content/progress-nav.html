@@ -1,0 +1,83 @@
+<h2>Navigazione e progress nel questionario</h2>
+<p class="subtitle">41 step totali. Come orientare l'utente?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#16141F;padding:20px;min-height:160px;display:flex;flex-direction:column;gap:12px;justify-content:center;">
+      <!-- 7 area dots -->
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#4A3F8C;display:flex;align-items:center;justify-content:center;font-size:10px;color:#EDE8FF;font-weight:700;">1</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#4A3F8C;display:flex;align-items:center;justify-content:center;font-size:10px;color:#EDE8FF;font-weight:700;">2</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#9A8FE0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#16141F;font-weight:700;">3</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:10px;color:#6B6890;font-weight:700;">4</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:10px;color:#6B6890;font-weight:700;">5</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:10px;color:#6B6890;font-weight:700;">6</div>
+        <div style="width:28px;height:28px;border-radius:50%;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:10px;color:#6B6890;font-weight:700;">7</div>
+      </div>
+      <!-- question dots within area -->
+      <div style="display:flex;gap:5px;align-items:center;justify-content:center;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#4A3F8C;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#4A3F8C;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#9A8FE0;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3A3550;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3A3550;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3A3550;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3A3550;"></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#9490B8;">Area 3 · I tuoi margini · Domanda 3 di 6</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Due livelli</h3>
+      <p>Cerchi grandi = 7 aree navigabili. Pallini piccoli = domande nell'area corrente. Sempre chiaro dove sei.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#16141F;padding:20px;min-height:160px;display:flex;flex-direction:column;gap:12px;justify-content:center;">
+      <!-- Segmented bar -->
+      <div style="display:flex;gap:3px;align-items:center;">
+        <div style="flex:1;height:4px;border-radius:2px;background:#4A3F8C;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#4A3F8C;"></div>
+        <div style="flex:1;height:6px;border-radius:3px;background:#9A8FE0;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#3A3550;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#3A3550;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#3A3550;"></div>
+        <div style="flex:1;height:4px;border-radius:2px;background:#3A3550;"></div>
+      </div>
+      <div style="text-align:center;font-size:22px;font-weight:700;color:#EDE8FF;">17 <span style="font-size:14px;color:#9490B8;">/ 41</span></div>
+      <div style="text-align:center;font-size:11px;color:#9490B8;">I tuoi margini · 3 di 6</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Barra segmentata + numero</h3>
+      <p>7 segmenti colorati per area, numero domanda prominente al centro. Minimalista.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#16141F;padding:20px;min-height:160px;display:flex;flex-direction:column;gap:10px;justify-content:center;">
+      <!-- Numbered pills -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;">
+        <div style="width:24px;height:24px;border-radius:6px;background:#4A3F8C;display:flex;align-items:center;justify-content:center;font-size:9px;color:#EDE8FF;font-weight:700;">1</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#4A3F8C;display:flex;align-items:center;justify-content:center;font-size:9px;color:#EDE8FF;font-weight:700;">2</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#9A8FE0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#16141F;font-weight:700;">3</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">4</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">5</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">6</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">7</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">8</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">9</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">10</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">11</div>
+        <div style="width:24px;height:24px;border-radius:6px;background:#3A3550;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;font-weight:700;">12</div>
+        <div style="width:5px;height:24px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6B6890;">...</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#9490B8;">Puoi cliccare su qualsiasi numero già visitato per tornare indietro</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Numerazione singola</h3>
+      <p>Tutti i 33+ step come quadratini numerati. Cliccabili se già risposto. Vedi tutto il percorso.</p>
+    </div>
+  </div>
+
+</div>

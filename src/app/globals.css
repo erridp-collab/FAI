@@ -1,24 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: hsl(42 50% 96%);
-  --color-foreground: hsl(35 53% 7%);
+  --color-canvas: #16141F;
+  --color-surface: #2D2A3E;
+  --color-raised: #3A3550;
   
-  --color-primary: hsl(339 55% 46%);
-  --color-primary-foreground: hsl(42 50% 96%);
+  --color-primary: #EDE8FF;
+  --color-secondary: #9490B8;
+  --color-tertiary: #6B6890;
   
-  --color-brand: hsl(47 86% 69%);
-  
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(35 53% 7%);
-  
-  --color-border: hsl(37 22% 90%);
-  --color-input: hsl(37 22% 90%);
-  --color-ring: hsl(339 55% 46%);
-  
-  --color-muted: hsl(35 44% 93%);
-  --color-muted-foreground: hsl(30 15% 42%);
-  
+  --color-accent: #4A3F8C;
+  --color-accent-surface: #9A8FE0;
+  --color-gold: #F3CF69;
+
   --radius-lg: 0.625rem;
   --radius-md: calc(0.625rem - 2px);
   --radius-sm: calc(0.625rem - 4px);
@@ -26,27 +20,21 @@
 
 @layer base {
   :root {
-    --background: 42 50% 96%;
-    --foreground: 35 53% 7%;
+    --background: #16141F;
+    --foreground: #EDE8FF;
   }
 
   html {
     scroll-behavior: smooth;
+    background-color: var(--color-canvas);
+    color: var(--color-primary);
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--color-canvas);
+    color: var(--color-primary);
     font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Soft background gradient from Business Manager */
-    background-image: radial-gradient(ellipse at 85% 8%, rgba(74,14,36,0.04) 0%, transparent 55%),
-                      radial-gradient(ellipse at 10% 90%, rgba(74,14,36,0.025) 0%, transparent 45%);
-  }
-
-  * {
-    border-color: var(--color-border);
   }
 }
-
