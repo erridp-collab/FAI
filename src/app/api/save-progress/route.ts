@@ -1,37 +1,74 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase/client';
-import { calculateResults } from '@/utils/scoring';
+import { NextResponse } from "next/server";
+
+import { calculateResults, type CompositeIndicators } from "@/utils/scoring";
+import { getServerSupabase } from "@/utils/supabase/server";
+
+type FinalData = {
+  nome_attivita: string;
+  settore: string;
+  citta: string;
+  email: string;
+};
+
+type SaveProgressRequest = {
+  tokenId?: string;
+  answers_percezione?: Record<string, number>;
+  answers_obiettivi?: string[];
+  answers_main?: Record<number, number>;
+  isFinal?: boolean;
+  finalData?: FinalData;
+};
+
+type SaveProgressPayload = {
+  token_id: string;
+  answers_percezione: Record<string, number>;
+  answers_obiettivi: string[];
+  answers_main: Record<number, number>;
+  nome_attivita?: string;
+  settore?: string;
+  citta?: string;
+  email?: string;
+  area_scores?: Record<string, number>;
+  composite_indicators?: CompositeIndicators;
+  completed_at?: string | null;
+};
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { tokenId, answers_percezione, answers_obiettivi, answers_main, isFinal, finalData } = body;
+    const supabase = getServerSupabase();
+    const body = (await request.json()) as SaveProgressRequest;
+    const {
+      tokenId,
+      answers_percezione,
+      answers_obiettivi,
+      answers_main,
+      isFinal,
+      finalData,
+    } = body;
 
     if (!tokenId) {
       return NextResponse.json({ error: "tokenId mancante" }, { status: 400 });
     }
 
-    // Controlla se esiste già una risposta per questo token
     const { data: existing } = await supabase
-      .from('fai_responses')
-      .select('id')
-      .eq('token_id', tokenId)
+      .from("fai_responses")
+      .select("id")
+      .eq("token_id", tokenId)
       .single();
 
     let responseId = existing?.id;
-    let area_scores = {};
-    let composite_indicators = {};
-    let completed_at = null;
+    let areaScores: Record<string, number> | undefined;
+    let compositeIndicators: CompositeIndicators | undefined;
+    let completedAt: string | null = null;
 
-    // Se è il submit finale, calcola i risultati
     if (isFinal) {
       const results = calculateResults(answers_main || {});
-      area_scores = results.areaScores;
-      composite_indicators = results.compositeIndicators;
-      completed_at = new Date().toISOString();
+      areaScores = results.areaScores;
+      compositeIndicators = results.compositeIndicators;
+      completedAt = new Date().toISOString();
     }
 
-    const payload: any = {
+    const payload: SaveProgressPayload = {
       token_id: tokenId,
       answers_percezione: answers_percezione || {},
       answers_obiettivi: answers_obiettivi || [],
@@ -43,37 +80,39 @@ export async function POST(request: Request) {
       payload.settore = finalData?.settore;
       payload.citta = finalData?.citta;
       payload.email = finalData?.email;
-      payload.area_scores = area_scores;
-      payload.composite_indicators = composite_indicators;
-      payload.completed_at = completed_at;
+      payload.area_scores = areaScores;
+      payload.composite_indicators = compositeIndicators;
+      payload.completed_at = completedAt;
     }
 
     if (responseId) {
-      // Aggiorna
       const { error: updateError } = await supabase
-        .from('fai_responses')
+        .from("fai_responses")
         .update(payload)
-        .eq('id', responseId);
+        .eq("id", responseId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        throw updateError;
+      }
     } else {
-      // Inserisce
       const { data: insertData, error: insertError } = await supabase
-        .from('fai_responses')
+        .from("fai_responses")
         .insert([payload])
-        .select('id')
+        .select("id")
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        throw insertError;
+      }
+
       responseId = insertData.id;
     }
 
-    // Se è finale, aggiorna anche access_tokens
     if (isFinal) {
       await supabase
-        .from('access_tokens')
-        .update({ used_at: completed_at, response_id: responseId })
-        .eq('id', tokenId);
+        .from("access_tokens")
+        .update({ used_at: completedAt, response_id: responseId })
+        .eq("id", tokenId);
     }
 
     return NextResponse.json({ ok: true, responseId });
@@ -86,23 +125,25 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const tokenId = searchParams.get('tokenId');
+    const tokenId = searchParams.get("tokenId");
 
     if (!tokenId) {
       return NextResponse.json({ error: "tokenId mancante" }, { status: 400 });
     }
 
+    const supabase = getServerSupabase();
     const { data, error } = await supabase
-      .from('fai_responses')
-      .select('*')
-      .eq('token_id', tokenId)
+      .from("fai_responses")
+      .select("*")
+      .eq("token_id", tokenId)
       .maybeSingle();
 
     if (error) {
       return NextResponse.json({ error: "Errore interno" }, { status: 500 });
     }
+
     return NextResponse.json({ ok: true, data: data || null });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });
   }
 }

@@ -1,21 +1,80 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import {
+  type FormEvent,
+  type HTMLInputTypeAttribute,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { perceptionQuestions, objectives, mainQuestions } from "@/data/questions";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+
+import { mainQuestions, objectives, perceptionQuestions } from "@/data/questions";
 import { calculateResults } from "@/utils/scoring";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const TOTAL_STEPS = 42;
+
+type FinalData = {
+  nome_attivita: string;
+  settore: string;
+  citta: string;
+  email: string;
+};
+
+type SavedProgressData = {
+  id: string;
+  answers_percezione?: Record<string, number>;
+  answers_obiettivi?: string[];
+  answers_main?: Record<number, number>;
+  completed_at?: string | null;
+};
+
+type SaveProgressGetResponse = {
+  ok?: boolean;
+  data?: SavedProgressData | null;
+};
+
+type SaveProgressPostResponse = {
+  ok?: boolean;
+  responseId?: string;
+  error?: string;
+};
+
+type DevResultsPayload = {
+  nome_attivita: string;
+  settore: string;
+  citta: string;
+  email: string;
+  area_scores: Record<string, number>;
+  composite_indicators: ReturnType<typeof calculateResults>["compositeIndicators"];
+};
+
+const FINAL_FIELDS = [
+  { label: "Nome Attività", key: "nome_attivita", type: "text" },
+  { label: "Settore", key: "settore", type: "text" },
+  { label: "Città", key: "citta", type: "text" },
+  { label: "Email", key: "email", type: "email" },
+] as const satisfies ReadonlyArray<{
+  label: string;
+  key: keyof FinalData;
+  type: HTMLInputTypeAttribute;
+}>;
+
+function getMissingMainQuestionNumbers(answersMain: Record<number, number>) {
+  return mainQuestions
+    .filter((question) => answersMain[question.id] === undefined)
+    .map((question) => question.number);
+}
 
 function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const devMode = searchParams.get("dev") === "1";
 
-  const [tokenId, setTokenId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [tokenId, setTokenId] = useState<string | null>(() => (devMode ? "__dev__" : null));
+  const [isInitializing, setIsInitializing] = useState(() => !devMode);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -23,27 +82,32 @@ function QuestionnaireContent() {
   const [answersPercezione, setAnswersPercezione] = useState<Record<string, number>>({});
   const [answersObiettivi, setAnswersObiettivi] = useState<string[]>([]);
   const [answersMain, setAnswersMain] = useState<Record<number, number>>({});
-  const [finalData, setFinalData] = useState({ nome_attivita: "", settore: "", citta: "", email: "" });
+  const [finalData, setFinalData] = useState<FinalData>({
+    nome_attivita: "",
+    settore: "",
+    citta: "",
+    email: "",
+  });
 
   useEffect(() => {
     if (devMode) {
-      setTokenId("__dev__");
-      setIsInitializing(false);
       return;
     }
 
     const token = sessionStorage.getItem("fai_token");
-    const tid = sessionStorage.getItem("fai_token_id");
+    const storedTokenId = sessionStorage.getItem("fai_token_id");
 
-    if (!token || !tid) {
+    if (!token || !storedTokenId) {
       router.push("/");
       return;
     }
-    setTokenId(tid);
 
-    fetch(`/api/save-progress?tokenId=${tid}`)
-      .then(res => res.json())
-      .then(data => {
+    const loadProgress = async () => {
+      try {
+        setTokenId(storedTokenId);
+        const res = await fetch(`/api/save-progress?tokenId=${storedTokenId}`);
+        const data = (await res.json()) as SaveProgressGetResponse;
+
         if (data.ok && data.data) {
           const loaded = data.data;
           setAnswersPercezione(loaded.answers_percezione || {});
@@ -55,31 +119,37 @@ function QuestionnaireContent() {
             return;
           }
 
-          let step = 0;
-          const percCount = Object.keys(loaded.answers_percezione || {}).length;
-          if (percCount < 7) {
-            step = percCount;
-          } else if ((loaded.answers_obiettivi || []).length < 3) {
-            step = 7;
-          } else {
-            const mainCount = Object.keys(loaded.answers_main || {}).length;
-            step = mainCount < 33 ? 8 + mainCount : 41;
+          const perceptionCount = Object.keys(loaded.answers_percezione || {}).length;
+
+          if (perceptionCount < 7) {
+            setCurrentStep(perceptionCount);
+            return;
           }
-          setCurrentStep(step);
+
+          if ((loaded.answers_obiettivi || []).length < 3) {
+            setCurrentStep(7);
+            return;
+          }
+
+          const mainCount = Object.keys(loaded.answers_main || {}).length;
+          setCurrentStep(mainCount < 33 ? 8 + mainCount : 41);
         }
+      } finally {
         setIsInitializing(false);
-      })
-      .catch(() => setIsInitializing(false));
-  }, [router, devMode]);
+      }
+    };
+
+    void loadProgress();
+  }, [devMode, router]);
 
   const saveProgress = async (isFinal = false): Promise<string | null> => {
     if (tokenId === "__dev__") {
-      if (isFinal) return "__dev__";
-      return null;
+      return isFinal ? "__dev__" : null;
     }
 
     setIsSaving(true);
     setSaveError(null);
+
     try {
       const res = await fetch("/api/save-progress", {
         method: "POST",
@@ -93,11 +163,18 @@ function QuestionnaireContent() {
           finalData,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      return data.responseId;
-    } catch (err: any) {
-      setSaveError(err.message || "Errore di salvataggio");
+
+      const data = (await res.json()) as SaveProgressPostResponse;
+
+      if (!res.ok) {
+        throw new Error(data.error || "Errore di salvataggio");
+      }
+
+      return data.responseId || null;
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Errore di salvataggio",
+      );
       return null;
     } finally {
       setIsSaving(false);
@@ -108,27 +185,36 @@ function QuestionnaireContent() {
     let advanced = false;
 
     if (currentStep < 7) {
-      const q = perceptionQuestions[currentStep];
-      setAnswersPercezione(prev => ({ ...prev, [q.id]: value }));
+      const question = perceptionQuestions[currentStep];
+      setAnswersPercezione((prev) => ({ ...prev, [question.id]: value }));
       advanced = true;
     } else if (currentStep >= 8 && currentStep <= 40) {
-      const q = mainQuestions[currentStep - 8];
-      setAnswersMain(prev => ({ ...prev, [q.id]: value }));
+      const question = mainQuestions[currentStep - 8];
+      setAnswersMain((prev) => ({ ...prev, [question.id]: value }));
       advanced = true;
     }
 
     if (advanced) {
-      setTimeout(() => saveProgress(), 0);
+      setTimeout(() => {
+        void saveProgress();
+      }, 0);
+
       if (currentStep < TOTAL_STEPS - 1) {
-        setTimeout(() => setCurrentStep(s => s + 1), 300);
+        setTimeout(() => setCurrentStep((step) => step + 1), 300);
       }
     }
   };
 
   const handleObjectiveToggle = (id: string) => {
-    setAnswersObiettivi(prev => {
-      if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length < 3) return [...prev, id];
+    setAnswersObiettivi((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((value) => value !== id);
+      }
+
+      if (prev.length < 3) {
+        return [...prev, id];
+      }
+
       return prev;
     });
   };
@@ -140,27 +226,59 @@ function QuestionnaireContent() {
     }
   };
 
-  const handleFinalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!finalData.nome_attivita || !finalData.settore || !finalData.citta || !finalData.email) return;
+  const handleFinalSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!finalData.nome_attivita || !finalData.settore || !finalData.citta || !finalData.email) {
+      return;
+    }
 
     if (tokenId === "__dev__") {
-      const results = calculateResults(answersMain);
-      const devPayload = {
-        nome_attivita: finalData.nome_attivita,
-        settore: finalData.settore,
-        citta: finalData.citta,
-        email: finalData.email,
-        area_scores: results.areaScores,
-        composite_indicators: results.compositeIndicators,
-      };
-      sessionStorage.setItem("fai_dev_results", JSON.stringify(devPayload));
-      router.push("/results/__dev__");
+      const missingQuestions = getMissingMainQuestionNumbers(answersMain);
+      if (missingQuestions.length > 0) {
+        const firstMissingQuestion = mainQuestions.find(
+          (question) => question.number === missingQuestions[0],
+        );
+
+        setSaveError(
+          `Mancano alcune risposte nel questionario: ${missingQuestions.join(", ")}.`,
+        );
+
+        if (firstMissingQuestion) {
+          setCurrentStep(8 + mainQuestions.findIndex((question) => question.id === firstMissingQuestion.id));
+        }
+
+        return;
+      }
+
+      try {
+        const results = calculateResults(answersMain);
+        const devPayload: DevResultsPayload = {
+          nome_attivita: finalData.nome_attivita,
+          settore: finalData.settore,
+          citta: finalData.citta,
+          email: finalData.email,
+          area_scores: results.areaScores,
+          composite_indicators: results.compositeIndicators,
+        };
+
+        sessionStorage.setItem("fai_dev_results", JSON.stringify(devPayload));
+        window.location.assign("/results/__dev__");
+      } catch (error) {
+        setSaveError(
+          error instanceof Error
+            ? error.message
+            : "Impossibile calcolare i risultati in modalità sviluppo.",
+        );
+      }
       return;
     }
 
     const responseId = await saveProgress(true);
-    if (responseId) router.push(`/results/${responseId}`);
+
+    if (responseId) {
+      router.push(`/results/${responseId}`);
+    }
   };
 
   if (isInitializing) {
@@ -176,28 +294,52 @@ function QuestionnaireContent() {
   const isMain = currentStep >= 8 && currentStep <= 40;
   const isFinalStep = currentStep === 41;
 
+  const currentPerceptionQuestion = isPerception
+    ? perceptionQuestions[currentStep]
+    : null;
+  const currentMainQuestion = isMain ? mainQuestions[currentStep - 8] : null;
+  const currentScaleQuestion = currentPerceptionQuestion || currentMainQuestion;
+
+  const isScaleValueSelected = (value: number) => {
+    if (currentPerceptionQuestion) {
+      return answersPercezione[currentPerceptionQuestion.id] === value;
+    }
+
+    if (currentMainQuestion) {
+      return answersMain[currentMainQuestion.id] === value;
+    }
+
+    return false;
+  };
+
   const renderSquares = () => {
     const squares = [];
-    for (let i = 0; i < TOTAL_STEPS; i++) {
-      let status = "future";
-      if (i < currentStep) status = "completed";
-      if (i === currentStep) status = "current";
 
-      let className = "w-6 h-6 flex items-center justify-center text-[10px] font-bold rounded-sm transition-colors cursor-default ";
+    for (let index = 0; index < TOTAL_STEPS; index++) {
+      let status = "future";
+      if (index < currentStep) status = "completed";
+      if (index === currentStep) status = "current";
+
+      let className =
+        "w-6 h-6 flex items-center justify-center text-[10px] font-bold rounded-sm transition-colors cursor-default ";
       if (status === "current") className += "bg-accent text-primary ";
-      else if (status === "completed") className += "bg-surface text-accent-surface cursor-pointer hover:bg-raised ";
-      else className += "bg-raised text-tertiary ";
+      else if (status === "completed") {
+        className += "bg-surface text-accent-surface cursor-pointer hover:bg-raised ";
+      } else {
+        className += "bg-raised text-tertiary ";
+      }
 
       squares.push(
         <div
-          key={i}
+          key={index}
           className={className}
-          onClick={() => status === "completed" && setCurrentStep(i)}
+          onClick={() => status === "completed" && setCurrentStep(index)}
         >
-          {i + 1}
-        </div>
+          {index + 1}
+        </div>,
       );
     }
+
     return (
       <div className="flex flex-wrap gap-1 mb-8 max-w-3xl mx-auto justify-center">
         {squares}
@@ -226,7 +368,9 @@ function QuestionnaireContent() {
             className="w-full max-w-2xl bg-surface p-6 md:p-10 rounded-2xl shadow-xl relative overflow-hidden"
           >
             {isPerception && (
-              <div className="text-accent-surface text-sm font-semibold mb-4 uppercase tracking-wider">Prima di iniziare</div>
+              <div className="text-accent-surface text-sm font-semibold mb-4 uppercase tracking-wider">
+                Prima di iniziare
+              </div>
             )}
             {isMain && (
               <div className="text-accent-surface text-sm font-semibold mb-4 uppercase tracking-wider">
@@ -240,43 +384,54 @@ function QuestionnaireContent() {
               </div>
             )}
 
-            {/* Domande scala 1-5 */}
-            {(isPerception || isMain) && (
+            {(isPerception || isMain) && currentScaleQuestion && (
               <div className="flex flex-col gap-8">
                 <h2 className="text-2xl md:text-3xl font-medium leading-tight text-primary">
-                  {isPerception ? perceptionQuestions[currentStep].text : mainQuestions[currentStep - 8].text}
+                  {currentScaleQuestion.text}
                 </h2>
+                <div className="bg-canvas/60 border border-raised rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-accent-surface">
+                      Usa la scala da 1 a 5
+                    </p>
+                    <p className="text-xs text-tertiary">2 e 4 sono valori intermedi</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    {[
+                      { value: 1, label: currentScaleQuestion.labels[1] },
+                      { value: 3, label: currentScaleQuestion.labels[3] },
+                      { value: 5, label: currentScaleQuestion.labels[5] },
+                    ].map((item) => (
+                      <div
+                        key={item.value}
+                        className="rounded-xl border border-raised bg-surface/60 p-3"
+                      >
+                        <div className="text-lg font-bold text-accent-surface mb-1">
+                          {item.value}
+                        </div>
+                        <p className="text-secondary leading-relaxed">{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
-                  {[1, 2, 3, 4, 5].map((val) => {
-                    const qData = isPerception ? perceptionQuestions[currentStep] : mainQuestions[currentStep - 8];
-                    const selected = isPerception
-                      ? answersPercezione[(qData as any).id] === val
-                      : answersMain[(qData as any).id] === val;
-
-                    let label = "";
-                    if (val === 1) label = qData.labels[1];
-                    if (val === 3) label = qData.labels[3];
-                    if (val === 5) label = qData.labels[5];
+                  {[1, 2, 3, 4, 5].map((value) => {
+                    const selected = isScaleValueSelected(value);
 
                     return (
                       <button
-                        key={val}
-                        onClick={() => handleAnswer(val)}
+                        key={value}
+                        onClick={() => handleAnswer(value)}
+                        aria-label={`Seleziona punteggio ${value} su 5`}
                         className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 text-center relative group
-                          ${selected ? "border-accent bg-accent/20 text-primary" : "border-raised bg-raised/30 text-secondary hover:border-accent-surface hover:bg-raised/50"}
+                          ${
+                            selected
+                              ? "border-accent bg-accent/20 text-primary"
+                              : "border-raised bg-raised/30 text-secondary hover:border-accent-surface hover:bg-raised/50"
+                          }
                         `}
                       >
-                        <span className="text-2xl font-bold mb-2">{val}</span>
-                        {label && (
-                          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-48 bg-canvas text-secondary text-xs p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 hidden md:block">
-                            {label}
-                          </div>
-                        )}
-                        {label && (
-                          <span className="text-[10px] md:hidden leading-tight text-tertiary">
-                            {label.substring(0, 30)}...
-                          </span>
-                        )}
+                        <span className="text-2xl font-bold">{value}</span>
                       </button>
                     );
                   })}
@@ -284,32 +439,42 @@ function QuestionnaireContent() {
               </div>
             )}
 
-            {/* Obiettivi (Step 7) */}
             {isObjectives && (
               <div className="flex flex-col gap-6">
-                <h2 className="text-2xl font-medium text-primary">Quali sono i tuoi 3 obiettivi principali adesso?</h2>
-                <p className="text-secondary text-sm">Seleziona esattamente 3 obiettivi per continuare.</p>
+                <h2 className="text-2xl font-medium text-primary">
+                  Quali sono i tuoi 3 obiettivi principali adesso?
+                </h2>
+                <p className="text-secondary text-sm">
+                  Seleziona esattamente 3 obiettivi per continuare.
+                </p>
                 <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto pr-2">
-                  {objectives.map((obj) => {
-                    const isSelected = answersObiettivi.includes(obj.id);
+                  {objectives.map((objective) => {
+                    const isSelected = answersObiettivi.includes(objective.id);
                     const isDisabled = !isSelected && answersObiettivi.length >= 3;
+
                     return (
                       <button
-                        key={obj.id}
-                        onClick={() => handleObjectiveToggle(obj.id)}
+                        key={objective.id}
+                        onClick={() => handleObjectiveToggle(objective.id)}
                         disabled={isDisabled}
                         className={`text-left p-4 rounded-xl border-2 transition-all flex items-start gap-4
-                          ${isSelected ? "border-accent bg-accent/20" : "border-raised bg-raised/30 hover:bg-raised/50"}
+                          ${
+                            isSelected
+                              ? "border-accent bg-accent/20"
+                              : "border-raised bg-raised/30 hover:bg-raised/50"
+                          }
                           ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
                         `}
                       >
-                        <div className={`w-6 h-6 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
-                          ${isSelected ? "bg-accent border-accent text-white" : "border-tertiary"}
-                        `}>
+                        <div
+                          className={`w-6 h-6 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
+                            ${isSelected ? "bg-accent border-accent text-white" : "border-tertiary"}
+                          `}
+                        >
                           {isSelected && <CheckCircle2 className="w-4 h-4" />}
                         </div>
                         <span className={isSelected ? "text-primary font-medium" : "text-secondary"}>
-                          {obj.text}
+                          {objective.text}
                         </span>
                       </button>
                     );
@@ -325,27 +490,34 @@ function QuestionnaireContent() {
               </div>
             )}
 
-            {/* Form finale (Step 41) */}
             {isFinalStep && (
               <div className="flex flex-col gap-6">
                 <h2 className="text-3xl font-medium text-primary">Ultimo step</h2>
                 <p className="text-secondary">
-                  Inserisci i dati della tua attività per visualizzare i risultati e ricevere il report completo via email.
+                  Inserisci i dati della tua attività per visualizzare i risultati e
+                  ricevere il report completo via email.
                 </p>
                 <form onSubmit={handleFinalSubmit} className="flex flex-col gap-4 mt-4">
-                  {[
-                    { label: "Nome Attività", key: "nome_attivita", type: "text" },
-                    { label: "Settore", key: "settore", type: "text" },
-                    { label: "Città", key: "citta", type: "text" },
-                    { label: "Email", key: "email", type: "email" },
-                  ].map(({ label, key, type }) => (
+                  {FINAL_FIELDS.map(({ label, key, type }) => (
                     <div key={key}>
-                      <label className="block text-sm font-medium text-secondary mb-1">{label} *</label>
+                      <label
+                        htmlFor={key}
+                        className="block text-sm font-medium text-secondary mb-1"
+                      >
+                        {label} *
+                      </label>
                       <input
+                        id={key}
                         type={type}
                         required
-                        value={(finalData as any)[key]}
-                        onChange={e => setFinalData({ ...finalData, [key]: e.target.value })}
+                        value={finalData[key]}
+                        onChange={(event) => {
+                          const { value } = event.currentTarget;
+                          setFinalData((prev) => ({
+                            ...prev,
+                            [key]: value,
+                          }));
+                        }}
                         className="w-full bg-canvas border border-raised rounded-lg p-3 text-primary focus:outline-none focus:border-accent"
                       />
                     </div>
@@ -355,7 +527,11 @@ function QuestionnaireContent() {
                     disabled={isSaving}
                     className="mt-6 w-full bg-accent hover:bg-accent/80 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center shadow-lg shadow-accent/20"
                   >
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Calcola i tuoi risultati →"}
+                    {isSaving ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      "Calcola i tuoi risultati →"
+                    )}
                   </button>
                 </form>
               </div>
@@ -369,11 +545,13 @@ function QuestionnaireContent() {
 
 export default function QuestionnairePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-canvas flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-accent-surface animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-canvas flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-accent-surface animate-spin" />
+        </div>
+      }
+    >
       <QuestionnaireContent />
     </Suspense>
   );
