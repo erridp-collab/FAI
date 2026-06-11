@@ -13,8 +13,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FAI Microimpresa | Diagnosi",
-  description: "Quanto è solida la tua attività? Scoprilo con la nostra diagnosi.",
+  metadataBase: new URL("https://fai-microimpresa.it"),
+  title: {
+    default: "FAI Microimpresa | Diagnosi gratuita",
+    template: "%s | FAI Microimpresa",
+  },
+  description:
+    "Quanto è solida la tua attività? 40 domande, 7 aree chiave, risultati immediati. Diagnosi costruita per piccole imprese e attività ricettive.",
+  openGraph: {
+    type: "website",
+    locale: "it_IT",
+    siteName: "FAI Microimpresa",
+    title: "FAI Microimpresa | Diagnosi gratuita",
+    description: "Quanto è solida la tua attività? Scoprilo con la diagnosi FAI.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "FAI Microimpresa – Diagnosi" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FAI Microimpresa | Diagnosi gratuita",
+    description: "Quanto è solida la tua attività?",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

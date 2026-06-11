@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from("fai_responses")
-      .select("id, email, nome_attivita, area_scores, completed_at, token_id")
+      .select("id, email, nome_attivita, area_scores, composite_indicators, completed_at, token_id")
       .eq("id", responseId)
       .eq("token_id", tokenId)
       .not("completed_at", "is", null)
@@ -45,6 +45,7 @@ export async function GET(request: Request) {
         email: data.email,
         nome_attivita: data.nome_attivita,
         area_scores: data.area_scores,
+        composite_indicators: data.composite_indicators,
       },
     });
   } catch (error) {

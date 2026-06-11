@@ -60,7 +60,7 @@ describe("GET /api/results/[id]", () => {
     expect(payload.data?.nome_attivita).toBe("Bottega Test");
     expect(from).toHaveBeenCalledWith("fai_responses");
     expect(select).toHaveBeenCalledWith(
-      "id, email, nome_attivita, area_scores, completed_at, token_id",
+      "id, email, nome_attivita, area_scores, composite_indicators, completed_at, token_id",
     );
     expect(eqId).toHaveBeenCalledWith("id", "resp-1");
     expect(eqTokenId).toHaveBeenCalledWith("token_id", "token-123");

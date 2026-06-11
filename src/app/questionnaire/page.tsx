@@ -14,7 +14,13 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { mainQuestions, objectives, perceptionQuestions } from "@/data/questions";
 import { calculateResults } from "@/utils/scoring";
 
-const TOTAL_STEPS = 42;
+const N_PERCEPTION = perceptionQuestions.length; // 7
+const N_MAIN = mainQuestions.length; // 33
+const STEP_OBJECTIVES = N_PERCEPTION;
+const STEP_MAIN_START = N_PERCEPTION + 1;
+const STEP_MAIN_END = N_PERCEPTION + N_MAIN;
+const STEP_FINAL = N_PERCEPTION + N_MAIN + 1;
+const TOTAL_STEPS = STEP_FINAL + 1;
 
 type FinalData = {
   nome_attivita: string;
@@ -71,7 +77,7 @@ function getMissingMainQuestionNumbers(answersMain: Record<number, number>) {
 function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const devMode = searchParams.get("dev") === "1";
+  const devMode = process.env.NODE_ENV !== "production" && searchParams.get("dev") === "1";
 
   const [tokenId, setTokenId] = useState<string | null>(() => (devMode ? "__dev__" : null));
   const [isInitializing, setIsInitializing] = useState(() => !devMode);
@@ -121,18 +127,18 @@ function QuestionnaireContent() {
 
           const perceptionCount = Object.keys(loaded.answers_percezione || {}).length;
 
-          if (perceptionCount < 7) {
+          if (perceptionCount < N_PERCEPTION) {
             setCurrentStep(perceptionCount);
             return;
           }
 
           if ((loaded.answers_obiettivi || []).length < 3) {
-            setCurrentStep(7);
+            setCurrentStep(STEP_OBJECTIVES);
             return;
           }
 
           const mainCount = Object.keys(loaded.answers_main || {}).length;
-          setCurrentStep(mainCount < 33 ? 8 + mainCount : 41);
+          setCurrentStep(mainCount < N_MAIN ? STEP_MAIN_START + mainCount : STEP_FINAL);
         }
       } finally {
         setIsInitializing(false);
@@ -142,7 +148,10 @@ function QuestionnaireContent() {
     void loadProgress();
   }, [devMode, router]);
 
-  const saveProgress = async (isFinal = false): Promise<string | null> => {
+  const saveProgress = async (
+    isFinal = false,
+    overrides?: { percezione?: Record<string, number>; main?: Record<number, number> },
+  ): Promise<string | null> => {
     if (tokenId === "__dev__") {
       return isFinal ? "__dev__" : null;
     }
@@ -156,9 +165,9 @@ function QuestionnaireContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tokenId,
-          answers_percezione: answersPercezione,
+          answers_percezione: overrides?.percezione ?? answersPercezione,
           answers_obiettivi: answersObiettivi,
-          answers_main: answersMain,
+          answers_main: overrides?.main ?? answersMain,
           isFinal,
           finalData,
         }),
@@ -181,27 +190,23 @@ function QuestionnaireContent() {
     }
   };
 
-  const handleAnswer = async (value: number) => {
-    let advanced = false;
-
-    if (currentStep < 7) {
+  const handleAnswer = (value: number) => {
+    if (currentStep < STEP_OBJECTIVES) {
       const question = perceptionQuestions[currentStep];
-      setAnswersPercezione((prev) => ({ ...prev, [question.id]: value }));
-      advanced = true;
-    } else if (currentStep >= 8 && currentStep <= 40) {
-      const question = mainQuestions[currentStep - 8];
-      setAnswersMain((prev) => ({ ...prev, [question.id]: value }));
-      advanced = true;
+      const updated = { ...answersPercezione, [question.id]: value };
+      setAnswersPercezione(updated);
+      void saveProgress(false, { percezione: updated });
+    } else if (currentStep >= STEP_MAIN_START && currentStep <= STEP_MAIN_END) {
+      const question = mainQuestions[currentStep - STEP_MAIN_START];
+      const updated = { ...answersMain, [question.id]: value };
+      setAnswersMain(updated);
+      void saveProgress(false, { main: updated });
+    } else {
+      return;
     }
 
-    if (advanced) {
-      setTimeout(() => {
-        void saveProgress();
-      }, 0);
-
-      if (currentStep < TOTAL_STEPS - 1) {
-        setTimeout(() => setCurrentStep((step) => step + 1), 300);
-      }
+    if (currentStep < TOTAL_STEPS - 1) {
+      setTimeout(() => setCurrentStep((step) => step + 1), 300);
     }
   };
 
@@ -289,15 +294,15 @@ function QuestionnaireContent() {
     );
   }
 
-  const isPerception = currentStep < 7;
-  const isObjectives = currentStep === 7;
-  const isMain = currentStep >= 8 && currentStep <= 40;
-  const isFinalStep = currentStep === 41;
+  const isPerception = currentStep < STEP_OBJECTIVES;
+  const isObjectives = currentStep === STEP_OBJECTIVES;
+  const isMain = currentStep >= STEP_MAIN_START && currentStep <= STEP_MAIN_END;
+  const isFinalStep = currentStep === STEP_FINAL;
 
   const currentPerceptionQuestion = isPerception
     ? perceptionQuestions[currentStep]
     : null;
-  const currentMainQuestion = isMain ? mainQuestions[currentStep - 8] : null;
+  const currentMainQuestion = isMain ? mainQuestions[currentStep - STEP_MAIN_START] : null;
   const currentScaleQuestion = currentPerceptionQuestion || currentMainQuestion;
 
   const isScaleValueSelected = (value: number) => {
@@ -321,7 +326,7 @@ function QuestionnaireContent() {
       if (index === currentStep) status = "current";
 
       let className =
-        "w-6 h-6 flex items-center justify-center text-[10px] font-bold rounded-sm transition-colors cursor-default ";
+        "w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-[9px] sm:text-[10px] font-bold rounded-sm transition-colors cursor-default ";
       if (status === "current") className += "bg-accent text-primary ";
       else if (status === "completed") {
         className += "bg-surface text-accent-surface cursor-pointer hover:bg-raised ";
@@ -357,7 +362,7 @@ function QuestionnaireContent() {
 
       {renderSquares()}
 
-      <div className="flex-grow flex items-center justify-center">
+      <div className="flex-grow flex flex-col items-center justify-center gap-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -374,7 +379,7 @@ function QuestionnaireContent() {
             )}
             {isMain && (
               <div className="text-accent-surface text-sm font-semibold mb-4 uppercase tracking-wider">
-                {mainQuestions[currentStep - 8].area}
+                {mainQuestions[currentStep - STEP_MAIN_START].area}
               </div>
             )}
 
@@ -414,7 +419,7 @@ function QuestionnaireContent() {
                     ))}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+                <div className="grid grid-cols-5 gap-2 mt-4">
                   {[1, 2, 3, 4, 5].map((value) => {
                     const selected = isScaleValueSelected(value);
 
@@ -423,7 +428,7 @@ function QuestionnaireContent() {
                         key={value}
                         onClick={() => handleAnswer(value)}
                         aria-label={`Seleziona punteggio ${value} su 5`}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 text-center relative group
+                        className={`flex flex-col items-center justify-center p-2 sm:p-4 rounded-xl border-2 transition-all duration-200 text-center relative group
                           ${
                             selected
                               ? "border-accent bg-accent/20 text-primary"
@@ -431,7 +436,7 @@ function QuestionnaireContent() {
                           }
                         `}
                       >
-                        <span className="text-2xl font-bold">{value}</span>
+                        <span className="text-xl sm:text-2xl font-bold">{value}</span>
                       </button>
                     );
                   })}
@@ -538,6 +543,15 @@ function QuestionnaireContent() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {currentStep > 0 && !isFinalStep && (
+          <button
+            onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
+            className="text-secondary text-sm flex items-center gap-1.5 hover:text-primary transition-colors py-2 px-4"
+          >
+            ← Indietro
+          </button>
+        )}
       </div>
     </div>
   );
