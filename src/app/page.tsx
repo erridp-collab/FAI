@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1";
 
 export default function Home() {
   return (
