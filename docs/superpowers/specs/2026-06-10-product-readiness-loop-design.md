@@ -17,7 +17,7 @@
 
 ## 1. I quattro artefatti permanenti
 
-Tutti sotto `fai-web/docs/product-readiness/`.
+Tutti sotto `docs/product-readiness/`.
 
 ### 1.1 `REFERENCE.md` — fonte di verità estratta dall'Excel
 Estrazione leggibile e versionata di `FAI_Microimpresa_v6(1).xlsx` (fonte canonica). Contiene, per ciascun foglio rilevante:

@@ -6,10 +6,12 @@ Oppure dalla root fai-web/ con percorsi relativi aggiornati:
     ../venv/Scripts/python.exe scripts/extract_reference.py
 """
 import os
+
 import openpyxl
 
 SRC = "FAI_Microimpresa_v6(1).xlsx"
-OUT = "fai-web/docs/product-readiness/REFERENCE_RAW.md"
+OUT = "docs/product-readiness/REFERENCE_RAW.md"
+
 
 def cell_repr(cell):
     val = cell.value
@@ -18,6 +20,7 @@ def cell_repr(cell):
     if isinstance(val, str) and val.startswith("="):
         return f"FORMULA `{val}`"
     return str(val).strip()
+
 
 def main():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -42,6 +45,7 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"Scritto {OUT} ({len(lines)} righe)")
+
 
 if __name__ == "__main__":
     main()
