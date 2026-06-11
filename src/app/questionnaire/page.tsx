@@ -77,7 +77,7 @@ function getMissingMainQuestionNumbers(answersMain: Record<number, number>) {
 function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const devMode = process.env.NODE_ENV !== "production" && searchParams.get("dev") === "1";
+  const devMode = process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1" && searchParams.get("dev") === "1";
 
   const [tokenId, setTokenId] = useState<string | null>(() => (devMode ? "__dev__" : null));
   const [isInitializing, setIsInitializing] = useState(() => !devMode);

@@ -91,7 +91,7 @@ export default function ResultsPage() {
   const params = useParams();
   const responseId = params?.id as string;
   const isDevResult =
-    process.env.NODE_ENV !== "production" && responseId === "__dev__";
+    process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1" && responseId === "__dev__";
 
   const [remoteData, setRemoteData] = useState<ResultsData | null>(null);
   const [isLoading, setIsLoading] = useState(!isDevResult);
