@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase/client';
+import { NextResponse } from "next/server";
+
+import { getServerSupabase } from "@/utils/supabase/server";
 
 export async function POST(request: Request) {
   try {
@@ -10,10 +11,12 @@ export async function POST(request: Request) {
     }
 
     // 1. Cerca token in access_tokens
+    const supabase = getServerSupabase();
+
     const { data: tokenData, error } = await supabase
-      .from('access_tokens')
-      .select('id, response_id')
-      .eq('token', token)
+      .from("access_tokens")
+      .select("id, response_id")
+      .eq("token", token)
       .single();
 
     if (error || !tokenData) {
@@ -23,9 +26,9 @@ export async function POST(request: Request) {
     // 2. Se ha response_id, verifica se è stato completato
     if (tokenData.response_id) {
       const { data: responseData } = await supabase
-        .from('fai_responses')
-        .select('completed_at')
-        .eq('id', tokenData.response_id)
+        .from("fai_responses")
+        .select("completed_at")
+        .eq("id", tokenData.response_id)
         .single();
 
       if (responseData && responseData.completed_at) {
