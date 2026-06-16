@@ -11,16 +11,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-import { mainQuestions, objectives, perceptionQuestions } from "@/data/questions";
+import { mainQuestions, objectives, perceptionQuestions, worries } from "@/data/questions";
 import { calculateResults } from "@/utils/scoring";
 
 const N_PERCEPTION = perceptionQuestions.length; // 7
 const N_MAIN = mainQuestions.length; // 33
-const STEP_OBJECTIVES = N_PERCEPTION;
-const STEP_MAIN_START = N_PERCEPTION + 1;
-const STEP_MAIN_END = N_PERCEPTION + N_MAIN;
-const STEP_FINAL = N_PERCEPTION + N_MAIN + 1;
-const TOTAL_STEPS = STEP_FINAL + 1;
+const STEP_OBJECTIVES    = N_PERCEPTION;           // 7
+const STEP_PREOCCUPAZIONE = N_PERCEPTION + 1;      // 8
+const STEP_TRANSITION    = N_PERCEPTION + 2;       // 9
+const STEP_MAIN_START    = N_PERCEPTION + 3;       // 10
+const STEP_MAIN_END      = N_PERCEPTION + 2 + N_MAIN; // 42
+const STEP_FINAL         = N_PERCEPTION + 3 + N_MAIN; // 43
+const TOTAL_STEPS        = STEP_FINAL + 1;         // 44
 
 type FinalData = {
   nome_attivita: string;
@@ -34,6 +36,11 @@ type SavedProgressData = {
   answers_percezione?: Record<string, number>;
   answers_obiettivi?: string[];
   answers_main?: Record<number, number>;
+  comments_percezione?: Record<string, string>;
+  comments_main?: Record<number, string>;
+  objectives_comments?: Record<string, string>;
+  preoccupazione?: string | null;
+  preoccupazione_comment?: string;
   completed_at?: string | null;
 };
 
@@ -94,6 +101,11 @@ function QuestionnaireContent() {
     citta: "",
     email: "",
   });
+  const [commentsPercezione, setCommentsPercezione] = useState<Record<string, string>>({});
+  const [commentsMain, setCommentsMain] = useState<Record<number, string>>({});
+  const [objectivesComments, setObjectivesComments] = useState<Record<string, string>>({});
+  const [preoccupazione, setPreoccupazione] = useState<string | null>(null);
+  const [preoccupazioneComment, setPreoccupazioneComment] = useState<string>("");
 
   useEffect(() => {
     if (devMode) {
