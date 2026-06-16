@@ -502,7 +502,7 @@ function QuestionnaireContent() {
                     placeholder="Commento facoltativo — puoi aggiungere un dettaglio o un contesto se vuoi…"
                     value={currentComment}
                     onChange={(e) => handleCommentChange(e.target.value)}
-                    className="w-full bg-canvas border border-raised rounded-xl p-3 text-sm text-primary resize-none h-20 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
+                    className="w-full bg-canvas border border-raised rounded-xl p-3 text-sm text-primary resize-none h-20 pb-6 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
                   />
                   <span className="absolute bottom-2 right-3 text-xs text-tertiary pointer-events-none">
                     {currentComment.length} / 400
@@ -545,30 +545,48 @@ function QuestionnaireContent() {
                     const isDisabled = !isSelected && answersObiettivi.length >= 3;
 
                     return (
-                      <button
-                        key={objective.id}
-                        onClick={() => handleObjectiveToggle(objective.id)}
-                        disabled={isDisabled}
-                        className={`text-left p-4 rounded-xl border-2 transition-all flex items-start gap-4
-                          ${
-                            isSelected
-                              ? "border-accent bg-accent/20"
-                              : "border-raised bg-raised/30 hover:bg-raised/50"
-                          }
-                          ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
-                        `}
-                      >
-                        <div
-                          className={`w-6 h-6 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
-                            ${isSelected ? "bg-accent border-accent text-white" : "border-tertiary"}
+                      <div key={objective.id} className="flex flex-col gap-2">
+                        <button
+                          onClick={() => handleObjectiveToggle(objective.id)}
+                          disabled={isDisabled}
+                          className={`text-left p-4 rounded-xl border-2 transition-all flex items-start gap-4
+                            ${
+                              isSelected
+                                ? "border-accent bg-accent/20"
+                                : "border-raised bg-raised/30 hover:bg-raised/50"
+                            }
+                            ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
                           `}
                         >
-                          {isSelected && <CheckCircle2 className="w-4 h-4" />}
-                        </div>
-                        <span className={isSelected ? "text-primary font-medium" : "text-secondary"}>
-                          {objective.text}
-                        </span>
-                      </button>
+                          <div
+                            className={`w-6 h-6 rounded border flex items-center justify-center flex-shrink-0 mt-0.5
+                              ${isSelected ? "bg-accent border-accent text-white" : "border-tertiary"}
+                            `}
+                          >
+                            {isSelected && <CheckCircle2 className="w-4 h-4" />}
+                          </div>
+                          <span className={isSelected ? "text-primary font-medium" : "text-secondary"}>
+                            {objective.text}
+                          </span>
+                        </button>
+                        {isSelected && (
+                          <div className="relative pl-2">
+                            <textarea
+                              maxLength={400}
+                              placeholder="Perché è importante per te — facoltativo"
+                              value={objectivesComments[objective.id] ?? ""}
+                              onChange={(e) =>
+                                setObjectivesComments((prev) => ({ ...prev, [objective.id]: e.target.value }))
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full bg-canvas border border-raised rounded-xl p-3 pb-6 text-sm text-primary resize-none h-16 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
+                            />
+                            <span className="absolute bottom-2 right-3 text-xs text-tertiary pointer-events-none">
+                              {(objectivesComments[objective.id] ?? "").length} / 400
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
