@@ -327,6 +327,8 @@ function QuestionnaireContent() {
   const isObjectives = currentStep === STEP_OBJECTIVES;
   const isMain = currentStep >= STEP_MAIN_START && currentStep <= STEP_MAIN_END;
   const isFinalStep = currentStep === STEP_FINAL;
+  const isPreoccupazione = currentStep === STEP_PREOCCUPAZIONE;
+  const isTransition = currentStep === STEP_TRANSITION;
 
   const currentPerceptionQuestion = isPerception
     ? perceptionQuestions[currentStep]
@@ -600,6 +602,94 @@ function QuestionnaireContent() {
               </div>
             )}
 
+            {isPreoccupazione && (
+              <div className="flex flex-col gap-6">
+                <div className="text-accent-surface text-sm font-semibold uppercase tracking-wider">
+                  Prima di iniziare
+                </div>
+                <h2 className="text-2xl md:text-3xl font-medium text-primary">
+                  Cosa ti preoccupa di più?
+                </h2>
+                <p className="text-secondary text-sm">Scegline UNA sola.</p>
+                <div className="flex flex-col gap-3">
+                  {worries.map((worry) => {
+                    const isSelected = preoccupazione === worry.id;
+                    return (
+                      <div key={worry.id} className="flex flex-col gap-2">
+                        <button
+                          onClick={() =>
+                            setPreoccupazione((prev) => (prev === worry.id ? null : worry.id))
+                          }
+                          className={`text-left p-4 rounded-xl border-2 transition-all
+                            ${
+                              isSelected
+                                ? "border-accent bg-accent/20"
+                                : "border-raised bg-raised/30 hover:bg-raised/50"
+                            }`}
+                        >
+                          <span className={isSelected ? "text-primary font-medium" : "text-secondary"}>
+                            {worry.text}
+                          </span>
+                        </button>
+                        {isSelected && (
+                          <div className="relative pl-2">
+                            <textarea
+                              maxLength={400}
+                              placeholder="Perché ti preoccupa — facoltativo"
+                              value={preoccupazioneComment}
+                              onChange={(e) => setPreoccupazioneComment(e.target.value)}
+                              className="w-full bg-canvas border border-raised rounded-xl p-3 pb-6 text-sm text-primary resize-none h-16 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
+                            />
+                            <span className="absolute bottom-2 right-3 text-xs text-tertiary pointer-events-none">
+                              {preoccupazioneComment.length} / 400
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={async () => {
+                    await saveProgress();
+                    setCurrentStep(STEP_TRANSITION);
+                  }}
+                  disabled={preoccupazione === null || isSaving}
+                  className="mt-2 w-full bg-accent hover:bg-accent/80 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center"
+                >
+                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continua →"}
+                </button>
+              </div>
+            )}
+
+            {isTransition && (
+              <div className="flex flex-col gap-8">
+                <div className="text-accent-surface text-sm font-semibold uppercase tracking-wider">
+                  Il questionario
+                </div>
+                <h2 className="text-2xl md:text-3xl font-medium text-primary leading-relaxed">
+                  Grazie delle informazioni che hai condiviso.
+                </h2>
+                <p className="text-secondary text-lg leading-relaxed">
+                  Ora clicca continua per iniziare il questionario vero e proprio.
+                </p>
+                <div className="flex items-center justify-between mt-4">
+                  <button
+                    onClick={() => setCurrentStep((s) => s - 1)}
+                    className="text-secondary text-sm flex items-center gap-1.5 hover:text-primary transition-colors"
+                  >
+                    ← Indietro
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep(STEP_MAIN_START)}
+                    className="bg-accent hover:bg-accent/80 text-white font-bold py-3 px-8 rounded-xl transition-all"
+                  >
+                    Continua →
+                  </button>
+                </div>
+              </div>
+            )}
+
             {isFinalStep && (
               <div className="flex flex-col gap-6">
                 <h2 className="text-3xl font-medium text-primary">Ultimo step</h2>
@@ -649,7 +739,7 @@ function QuestionnaireContent() {
           </motion.div>
         </AnimatePresence>
 
-        {currentStep > 0 && !isFinalStep && !isPerception && !isMain && (
+        {currentStep > 0 && !isFinalStep && !isPerception && !isMain && !isTransition && (
           <button
             onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
             className="text-secondary text-sm flex items-center gap-1.5 hover:text-primary transition-colors py-2 px-4"
