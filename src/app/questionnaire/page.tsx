@@ -131,6 +131,11 @@ function QuestionnaireContent() {
           setAnswersPercezione(loaded.answers_percezione || {});
           setAnswersObiettivi(loaded.answers_obiettivi || []);
           setAnswersMain(loaded.answers_main || {});
+          setCommentsPercezione(loaded.comments_percezione || {});
+          setCommentsMain(loaded.comments_main || {});
+          setObjectivesComments(loaded.objectives_comments || {});
+          setPreoccupazione(loaded.preoccupazione || null);
+          setPreoccupazioneComment(loaded.preoccupazione_comment || "");
 
           if (loaded.completed_at) {
             router.push(`/results/${loaded.id}`);
@@ -149,7 +154,18 @@ function QuestionnaireContent() {
             return;
           }
 
+          if (!loaded.preoccupazione) {
+            setCurrentStep(STEP_PREOCCUPAZIONE);
+            return;
+          }
+
           const mainCount = Object.keys(loaded.answers_main || {}).length;
+
+          if (mainCount === 0) {
+            setCurrentStep(STEP_TRANSITION);
+            return;
+          }
+
           setCurrentStep(mainCount < N_MAIN ? STEP_MAIN_START + mainCount : STEP_FINAL);
         }
       } finally {
@@ -182,6 +198,11 @@ function QuestionnaireContent() {
           answers_main: overrides?.main ?? answersMain,
           isFinal,
           finalData,
+          comments_percezione: commentsPercezione,
+          comments_main: commentsMain,
+          objectives_comments: objectivesComments,
+          preoccupazione,
+          preoccupazione_comment: preoccupazioneComment,
         }),
       });
 
@@ -216,10 +237,6 @@ function QuestionnaireContent() {
     } else {
       return;
     }
-
-    if (currentStep < TOTAL_STEPS - 1) {
-      setTimeout(() => setCurrentStep((step) => step + 1), 300);
-    }
   };
 
   const handleObjectiveToggle = (id: string) => {
@@ -239,7 +256,7 @@ function QuestionnaireContent() {
   const handleObjectivesSubmit = async () => {
     if (answersObiettivi.length === 3) {
       await saveProgress();
-      setCurrentStep(8);
+      setCurrentStep(STEP_PREOCCUPAZIONE);
     }
   };
 
@@ -262,7 +279,7 @@ function QuestionnaireContent() {
         );
 
         if (firstMissingQuestion) {
-          setCurrentStep(8 + mainQuestions.findIndex((question) => question.id === firstMissingQuestion.id));
+          setCurrentStep(STEP_MAIN_START + mainQuestions.findIndex((question) => question.id === firstMissingQuestion.id));
         }
 
         return;
