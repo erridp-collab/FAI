@@ -17,6 +17,11 @@ type SaveProgressRequest = {
   answers_main?: Record<number, number>;
   isFinal?: boolean;
   finalData?: FinalData;
+  comments_percezione?: Record<string, string>;
+  comments_main?: Record<number, string>;
+  objectives_comments?: Record<string, string>;
+  preoccupazione?: string | null;
+  preoccupazione_comment?: string;
 };
 
 type SaveProgressPayload = {
@@ -24,6 +29,11 @@ type SaveProgressPayload = {
   answers_percezione: Record<string, number>;
   answers_obiettivi: string[];
   answers_main: Record<number, number>;
+  comments_percezione?: Record<string, string>;
+  comments_main?: Record<number, string>;
+  objectives_comments?: Record<string, string>;
+  preoccupazione?: string | null;
+  preoccupazione_comment?: string;
   nome_attivita?: string;
   settore?: string;
   citta?: string;
@@ -44,6 +54,11 @@ export async function POST(request: Request) {
       answers_main,
       isFinal,
       finalData,
+      comments_percezione,
+      comments_main,
+      objectives_comments,
+      preoccupazione,
+      preoccupazione_comment,
     } = body;
 
     if (!tokenId) {
@@ -73,6 +88,11 @@ export async function POST(request: Request) {
       answers_percezione: answers_percezione || {},
       answers_obiettivi: answers_obiettivi || [],
       answers_main: answers_main || {},
+      comments_percezione,
+      comments_main,
+      objectives_comments,
+      preoccupazione,
+      preoccupazione_comment,
     };
 
     if (isFinal) {
