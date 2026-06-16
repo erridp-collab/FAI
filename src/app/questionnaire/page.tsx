@@ -346,6 +346,35 @@ function QuestionnaireContent() {
     return false;
   };
 
+  const hasScoreSelected =
+    (isPerception &&
+      currentPerceptionQuestion !== null &&
+      answersPercezione[currentPerceptionQuestion.id] !== undefined) ||
+    (isMain &&
+      currentMainQuestion !== null &&
+      answersMain[currentMainQuestion.id] !== undefined);
+
+  const currentComment =
+    isPerception && currentPerceptionQuestion
+      ? (commentsPercezione[currentPerceptionQuestion.id] ?? "")
+      : isMain && currentMainQuestion
+      ? (commentsMain[currentMainQuestion.id] ?? "")
+      : "";
+
+  const handleCommentChange = (value: string) => {
+    if (isPerception && currentPerceptionQuestion) {
+      setCommentsPercezione((prev) => ({ ...prev, [currentPerceptionQuestion.id]: value }));
+    } else if (isMain && currentMainQuestion) {
+      setCommentsMain((prev) => ({ ...prev, [currentMainQuestion.id]: value }));
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < TOTAL_STEPS - 1) {
+      setCurrentStep((s) => s + 1);
+    }
+  };
+
   const renderSquares = () => {
     const squares = [];
 
@@ -399,7 +428,7 @@ function QuestionnaireContent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-2xl bg-surface p-6 md:p-10 rounded-2xl shadow-xl relative overflow-hidden"
+            className="w-full max-w-4xl bg-surface p-6 md:p-10 rounded-2xl shadow-xl relative overflow-hidden"
           >
             {isPerception && (
               <div className="text-accent-surface text-sm font-semibold mb-4 uppercase tracking-wider">
@@ -419,56 +448,85 @@ function QuestionnaireContent() {
             )}
 
             {(isPerception || isMain) && currentScaleQuestion && (
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6">
                 <h2 className="text-2xl md:text-3xl font-medium leading-tight text-primary">
                   {currentScaleQuestion.text}
                 </h2>
-                <div className="bg-canvas/60 border border-raised rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-medium text-accent-surface">
-                      Usa la scala da 1 a 5
-                    </p>
-                    <p className="text-xs text-tertiary">2 e 4 sono valori intermedi</p>
+
+                {isMain && currentMainQuestion && (
+                  <div className="text-sm text-secondary italic border-l-2 border-accent-surface/30 pl-3">
+                    {currentMainQuestion.hint}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                    {[
-                      { value: 1, label: currentScaleQuestion.labels[1] },
-                      { value: 3, label: currentScaleQuestion.labels[3] },
-                      { value: 5, label: currentScaleQuestion.labels[5] },
-                    ].map((item) => (
-                      <div
-                        key={item.value}
-                        className="rounded-xl border border-raised bg-surface/60 p-3"
-                      >
-                        <div className="text-lg font-bold text-accent-surface mb-1">
-                          {item.value}
-                        </div>
-                        <p className="text-secondary leading-relaxed">{item.label}</p>
-                      </div>
-                    ))}
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-3 gap-2 text-xs text-secondary">
+                    <span>
+                      <span className="text-accent-surface font-semibold">1 — </span>
+                      {currentScaleQuestion.labels[1]}
+                    </span>
+                    <span className="text-center">
+                      <span className="text-accent-surface font-semibold">3 — </span>
+                      {currentScaleQuestion.labels[3]}
+                    </span>
+                    <span className="text-right">
+                      <span className="text-accent-surface font-semibold">5 — </span>
+                      {currentScaleQuestion.labels[5]}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const selected = isScaleValueSelected(value);
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => handleAnswer(value)}
+                          aria-label={`Seleziona punteggio ${value} su 5`}
+                          className={`flex items-center justify-center py-3 rounded-xl border-2 transition-all duration-200
+                            ${
+                              selected
+                                ? "border-accent bg-accent/20 text-primary"
+                                : "border-raised bg-raised/30 text-secondary hover:border-accent-surface hover:bg-raised/50"
+                            }`}
+                        >
+                          <span className="text-xl font-bold">{value}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className="grid grid-cols-5 gap-2 mt-4">
-                  {[1, 2, 3, 4, 5].map((value) => {
-                    const selected = isScaleValueSelected(value);
 
-                    return (
-                      <button
-                        key={value}
-                        onClick={() => handleAnswer(value)}
-                        aria-label={`Seleziona punteggio ${value} su 5`}
-                        className={`flex flex-col items-center justify-center p-2 sm:p-4 rounded-xl border-2 transition-all duration-200 text-center relative group
-                          ${
-                            selected
-                              ? "border-accent bg-accent/20 text-primary"
-                              : "border-raised bg-raised/30 text-secondary hover:border-accent-surface hover:bg-raised/50"
-                          }
-                        `}
-                      >
-                        <span className="text-xl sm:text-2xl font-bold">{value}</span>
-                      </button>
-                    );
-                  })}
+                <div className="relative">
+                  <textarea
+                    maxLength={400}
+                    placeholder="Commento facoltativo — puoi aggiungere un dettaglio o un contesto se vuoi…"
+                    value={currentComment}
+                    onChange={(e) => handleCommentChange(e.target.value)}
+                    className="w-full bg-canvas border border-raised rounded-xl p-3 text-sm text-primary resize-none h-20 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
+                  />
+                  <span className="absolute bottom-2 right-3 text-xs text-tertiary pointer-events-none">
+                    {currentComment.length} / 400
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  {currentStep > 0 ? (
+                    <button
+                      onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
+                      className="text-secondary text-sm flex items-center gap-1.5 hover:text-primary transition-colors"
+                    >
+                      ← Indietro
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+                  <button
+                    onClick={handleNext}
+                    disabled={!hasScoreSelected}
+                    className="bg-accent hover:bg-accent/80 text-white font-bold py-3 px-6 rounded-xl transition-all disabled:opacity-40"
+                  >
+                    Avanti →
+                  </button>
                 </div>
               </div>
             )}
@@ -573,7 +631,7 @@ function QuestionnaireContent() {
           </motion.div>
         </AnimatePresence>
 
-        {currentStep > 0 && !isFinalStep && (
+        {currentStep > 0 && !isFinalStep && !isPerception && !isMain && (
           <button
             onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
             className="text-secondary text-sm flex items-center gap-1.5 hover:text-primary transition-colors py-2 px-4"
