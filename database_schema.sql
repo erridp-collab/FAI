@@ -25,6 +25,11 @@ CREATE TABLE public.fai_responses (
     answers_percezione JSONB DEFAULT '{}'::jsonb,
     answers_obiettivi JSONB DEFAULT '[]'::jsonb,
     answers_main JSONB DEFAULT '{}'::jsonb,
+    comments_percezione     JSONB,       -- {"p1.1": "comment text", ...}
+    comments_main           JSONB,       -- {"1": "comment text", ...}
+    objectives_comments     JSONB,       -- {"2.1": "comment text", ...}
+    preoccupazione          TEXT,        -- selected worry ID e.g. "3.2"
+    preoccupazione_comment  TEXT,        -- optional comment on the worry
     area_scores JSONB DEFAULT '{}'::jsonb,
     composite_indicators JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
