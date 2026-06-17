@@ -229,7 +229,7 @@ export default function AdminResponsePage() {
             <p className="text-secondary text-sm mb-4">Sette dimensioni trasversali che emergono dall&apos;insieme delle risposte.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {COMPOSITE_META.map(({ key, label, description }) => {
-                const score = compositeIndicators[key];
+                const score = compositeIndicators[key] ?? 0;
                 const level = getCompositeLevel(score);
                 const borderColor = LEVEL_BORDER_COLOR[level];
                 const barColor = LEVEL_BAR_COLOR[level];
