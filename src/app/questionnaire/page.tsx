@@ -543,14 +543,13 @@ function QuestionnaireContent() {
                           key={value}
                           onClick={() => handleAnswer(value)}
                           aria-label={`Seleziona punteggio ${value} su 5`}
-                          className={`flex items-center justify-center py-3 rounded-xl border-2 transition-all duration-200
-                            ${
-                              selected
-                                ? "border-accent bg-accent/20 text-primary"
-                                : "border-raised bg-raised/30 text-secondary hover:border-accent-surface hover:bg-raised/50"
-                            }`}
+                          className={`flex items-center justify-center py-4 rounded-xl transition-all duration-200 ${
+                            selected
+                              ? "bg-accent text-primary shadow-[0_4px_16px_rgba(74,63,140,0.4)] -translate-y-0.5"
+                              : "bg-raised text-tertiary hover:text-secondary hover:bg-raised/80"
+                          }`}
                         >
-                          <span className="text-xl font-bold">{value}</span>
+                          <span className="text-2xl font-extrabold">{value}</span>
                         </button>
                       );
                     })}
