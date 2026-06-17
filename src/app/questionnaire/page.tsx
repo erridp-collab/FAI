@@ -423,6 +423,9 @@ function QuestionnaireContent() {
                 <div
                   key={phase}
                   onClick={() => isDone && setCurrentStep(phaseStarts[phase - 1])}
+                  role={isDone ? "button" : undefined}
+                  tabIndex={isDone ? 0 : undefined}
+                  onKeyDown={isDone ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentStep(phaseStarts[phase - 1]); } } : undefined}
                   className={`h-[3px] w-6 rounded-full transition-all ${
                     isDone
                       ? "bg-accent cursor-pointer hover:bg-accent-surface"
@@ -447,6 +450,9 @@ function QuestionnaireContent() {
                 <div
                   key={step}
                   onClick={() => isDone && setCurrentStep(step)}
+                  role={isDone ? "button" : undefined}
+                  tabIndex={isDone ? 0 : undefined}
+                  onKeyDown={isDone ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentStep(step); } } : undefined}
                   className={`w-1.5 h-1.5 rounded-full transition-all ${
                     isDone
                       ? "bg-accent cursor-pointer hover:bg-accent-surface"

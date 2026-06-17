@@ -94,13 +94,6 @@ const LEVEL_BORDER_COLOR: Record<keyof typeof LEVEL_STYLES, string> = {
   Solida: "#4ade80",
 };
 
-const LEVEL_SCORE_COLOR: Record<keyof typeof LEVEL_STYLES, string> = {
-  Fragile: "#f87171",
-  Vulnerabile: "#F3CF69",
-  Adeguata: "#9A8FE0",
-  Solida: "#4ade80",
-};
-
 export default function ResultsPage() {
   const params = useParams();
   const responseId = params?.id as string;
@@ -252,6 +245,7 @@ export default function ResultsPage() {
                   fill="rgba(154,143,224,0.15)"
                   fillOpacity={1}
                   dot={(props: RadarPointProps) => {
+                    if (props.cx == null || props.cy == null) return <></>;
                     const isLowest = props.payload?.subject === lowestArea;
                     return (
                       <circle
@@ -337,7 +331,6 @@ export default function ResultsPage() {
                 const score = compositeIndicators[key];
                 const level = getCompositeLevel(score);
                 const borderColor = LEVEL_BORDER_COLOR[level];
-                const scoreColor = LEVEL_SCORE_COLOR[level];
                 const barColor = LEVEL_BAR_COLOR[level];
 
                 return (
@@ -350,7 +343,7 @@ export default function ResultsPage() {
                       <span className="font-bold text-primary text-sm">{label}</span>
                       <span
                         className="text-base font-extrabold tabular-nums"
-                        style={{ color: scoreColor }}
+                        style={{ color: borderColor }}
                       >
                         {score.toFixed(2)}
                       </span>
