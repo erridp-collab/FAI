@@ -209,7 +209,7 @@ export default function ResultsPage() {
       <div className="max-w-4xl mx-auto space-y-10">
         {/* Header */}
         <header className="relative text-center space-y-4 py-4 overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,63,140,0.15)_0%,transparent_70%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,63,140,0.12)_0%,transparent_70%)] pointer-events-none" />
           <div className="relative z-10 inline-flex items-center gap-2 bg-accent/25 text-accent-surface px-4 py-2 rounded-full text-sm font-semibold tracking-wider border border-accent-surface/30 shadow-[0_0_20px_rgba(74,63,140,0.3)]">
             <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center text-[9px] font-bold text-white shadow-[0_0_8px_rgba(154,143,224,0.6)]">
               ✓
