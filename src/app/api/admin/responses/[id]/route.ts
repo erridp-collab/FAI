@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/utils/supabase/server";
 import { requireAdmin } from "@/utils/admin-auth";
 
+export type ResultsData = {
+  id: string;
+  email: string | null;
+  nome_attivita: string | null;
+  area_scores: Record<string, number> | null;
+  composite_indicators: Record<string, number> | null;
+};
+
 function getResponseIdFromRequest(request: Request): string | null {
   const pathname = new URL(request.url).pathname;
   const segments = pathname.split("/").filter(Boolean);
