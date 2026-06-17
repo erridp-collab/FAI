@@ -29,6 +29,7 @@ type FinalData = {
   settore: string;
   citta: string;
   email: string;
+  commento_finale: string;
 };
 
 type SavedProgressData = {
@@ -100,6 +101,7 @@ function QuestionnaireContent() {
     settore: "",
     citta: "",
     email: "",
+    commento_finale: "",
   });
   const [commentsPercezione, setCommentsPercezione] = useState<Record<string, string>>({});
   const [commentsMain, setCommentsMain] = useState<Record<number, string>>({});
@@ -780,6 +782,29 @@ function QuestionnaireContent() {
                       />
                     </div>
                   ))}
+                  <div>
+                    <label
+                      htmlFor="commento_finale"
+                      className="block text-sm font-medium text-secondary mb-1"
+                    >
+                      Vuoi aggiungere qualcosa? <span className="text-tertiary font-normal">(facoltativo)</span>
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        id="commento_finale"
+                        maxLength={1000}
+                        placeholder="Un pensiero libero, un contesto che potrebbe essere utile, qualcosa che non rientra nelle domande…"
+                        value={finalData.commento_finale}
+                        onChange={(e) =>
+                          setFinalData((prev) => ({ ...prev, commento_finale: e.target.value }))
+                        }
+                        className="w-full bg-canvas border border-raised rounded-xl p-3 pb-6 text-sm text-primary resize-none h-28 focus:outline-none focus:border-accent-surface placeholder:text-tertiary"
+                      />
+                      <span className="absolute bottom-2 right-3 text-xs text-tertiary pointer-events-none">
+                        {finalData.commento_finale.length} / 1000
+                      </span>
+                    </div>
+                  </div>
                   <button
                     type="submit"
                     disabled={isSaving}
