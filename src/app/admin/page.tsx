@@ -26,6 +26,7 @@ function formatDate(iso: string) {
 export default function AdminPage() {
   const [tokens, setTokens] = useState<AdminToken[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState("");
   const [email, setEmail] = useState("");
@@ -35,9 +36,16 @@ export default function AdminPage() {
 
   useEffect(() => {
     void fetch("/api/admin/tokens")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Errore nel caricamento");
+        return r.json();
+      })
       .then((data: { tokens?: AdminToken[] }) => {
         setTokens(data.tokens ?? []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setFetchError("Impossibile caricare i token. Ricarica la pagina.");
         setLoading(false);
       });
   }, []);
@@ -104,6 +112,8 @@ export default function AdminPage() {
         {/* Table */}
         {loading ? (
           <p className="text-secondary text-sm">Caricamento…</p>
+        ) : fetchError ? (
+          <p className="text-red-400 text-sm">{fetchError}</p>
         ) : tokens.length === 0 ? (
           <p className="text-secondary text-sm">Nessun token creato.</p>
         ) : (
