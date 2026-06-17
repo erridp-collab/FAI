@@ -54,6 +54,29 @@ Lo scopo e offrire una diagnosi gratuita per piccole attivita commerciali e rice
 - `npm run test`
 - `npm run test:e2e`
 
+## Strategia branch
+
+- **`main`** — codice di produzione. NON deve contenere nulla legato al dev mode (`NEXT_PUBLIC_ALLOW_DEV_MODE`). Chiunque abbia accesso al repo vedrebbe il flag.
+- **`preview`** — identico a `main` + il fix dev mode che abilita il pulsante di test in homepage. Va riapplicato con cherry-pick ogni volta che si mergia su `main`.
+- Regola: ogni volta che si fa push su `main`, fare cherry-pick del commit dev mode su `preview` e force-push.
+
+## UI Premium Upgrade (2026-06-17)
+
+Upgrade visivo completo documentato in `docs/superpowers/specs/2026-06-17-ui-premium-upgrade-design.md`.
+
+Modifiche applicate:
+
+- **Progress indicator** (`questionnaire/page.tsx`) — sostituita la griglia 44 quadratini con una mini-bar compatta a una riga: 4 pillole fase + divisore + dots area corrente + nome area + contatore. Pills e dots sono cliccabili e keyboard-accessible.
+- **Scale 1–5** (`questionnaire/page.tsx`) — pulsanti filled: default `bg-raised`, selezionato `bg-accent` + shadow + `-translate-y-0.5`. Font `text-2xl font-extrabold`.
+- **Commento finale** (`questionnaire/page.tsx`) — textarea opzionale (max 1000 chars + contatore) nell'ultimo step, sopra il pulsante submit.
+- **API save-progress** (`api/save-progress/route.ts`) — accetta e salva `commento_finale` nel payload finale.
+- **DB** (`database_schema.sql`) — colonna `commento_finale TEXT DEFAULT '' NOT NULL` aggiunta a `fai_responses`. Migrazione applicata su Supabase (`qljhgtzgvywealorsrvr`).
+- **Homepage hero** (`page.tsx`) — radial gradient di sfondo + SVG radar chart statico 90×90px + glow dot nel pill badge.
+- **Homepage CTA** (`page.tsx`) — card con gradient, pulsante primario "Richiedi l'accesso →", snippet token, link contatto.
+- **Results header** (`results/[id]/page.tsx`) — linear gradient 180deg + badge "DIAGNOSI COMPLETATA" con cerchio glow.
+- **Results indicatori compositi** (`results/[id]/page.tsx`) — da lista a card grid 2 colonne con bordo sinistro colorato per livello (Fragile/Vulnerabile/Adeguata/Solida).
+- **Results email CTA** (`results/[id]/page.tsx`) — card minimal con icona 📬 e timeline tre passi (Diagnosi completata → Elaborazione → Report via email).
+
 ## Note importanti
 
 - Il progetto usa Next.js 16, React 19 e Tailwind CSS v4.
