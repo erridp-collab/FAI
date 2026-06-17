@@ -377,37 +377,96 @@ function QuestionnaireContent() {
     }
   };
 
-  const renderSquares = () => {
-    const squares = [];
+  const renderProgressBar = () => {
+    const currentPhase =
+      currentStep <= 6 ? 1
+      : currentStep <= 9 ? 2
+      : currentStep <= 42 ? 3
+      : 4;
 
-    for (let index = 0; index < TOTAL_STEPS; index++) {
-      let status = "future";
-      if (index < currentStep) status = "completed";
-      if (index === currentStep) status = "current";
+    // Start step for each phase (used for click navigation)
+    const phaseStarts = [0, STEP_OBJECTIVES, STEP_MAIN_START, STEP_FINAL];
 
-      let className =
-        "w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-[9px] sm:text-[10px] font-bold rounded-sm transition-colors cursor-default ";
-      if (status === "current") className += "bg-accent text-primary ";
-      else if (status === "completed") {
-        className += "bg-surface text-accent-surface cursor-pointer hover:bg-raised ";
-      } else {
-        className += "bg-raised text-tertiary ";
-      }
-
-      squares.push(
-        <div
-          key={index}
-          className={className}
-          onClick={() => status === "completed" && setCurrentStep(index)}
-        >
-          {index + 1}
-        </div>,
-      );
+    // Dots to show for the current phase
+    let dots: number[] = [];
+    if (currentPhase === 1) {
+      dots = Array.from({ length: 7 }, (_, i) => i);
+    } else if (currentPhase === 2) {
+      dots = [STEP_OBJECTIVES, STEP_PREOCCUPAZIONE, STEP_TRANSITION];
+    } else if (currentPhase === 3) {
+      const currentArea = mainQuestions[currentStep - STEP_MAIN_START]?.area ?? "";
+      dots = mainQuestions
+        .map((q, i) => ({ area: q.area, step: STEP_MAIN_START + i }))
+        .filter(({ area }) => area === currentArea)
+        .map(({ step }) => step);
+    } else {
+      dots = [STEP_FINAL];
     }
 
+    const areaLabel =
+      currentPhase === 1 ? "Come ti senti"
+      : currentPhase === 2 ? "Obiettivi"
+      : currentPhase === 3 ? (mainQuestions[currentStep - STEP_MAIN_START]?.area ?? "")
+      : "Dati finali";
+
     return (
-      <div className="flex flex-wrap gap-1 mb-8 max-w-3xl mx-auto justify-center">
-        {squares}
+      <div className="mb-6 max-w-4xl mx-auto w-full">
+        <div className="flex items-center gap-2.5 bg-surface border border-raised rounded-lg px-3 py-2">
+          {/* Phase pills */}
+          <div className="flex gap-1.5 items-center flex-shrink-0">
+            {([1, 2, 3, 4] as const).map((phase) => {
+              const isDone = phase < currentPhase;
+              const isCurrent = phase === currentPhase;
+              return (
+                <div
+                  key={phase}
+                  onClick={() => isDone && setCurrentStep(phaseStarts[phase - 1])}
+                  className={`h-[3px] w-6 rounded-full transition-all ${
+                    isDone
+                      ? "bg-accent cursor-pointer hover:bg-accent-surface"
+                      : isCurrent
+                      ? "bg-accent-surface"
+                      : "bg-raised"
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-raised flex-shrink-0" />
+
+          {/* Question dots */}
+          <div className="flex gap-1 items-center flex-shrink-0">
+            {dots.map((step) => {
+              const isDone = step < currentStep;
+              const isCurrent = step === currentStep;
+              return (
+                <div
+                  key={step}
+                  onClick={() => isDone && setCurrentStep(step)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    isDone
+                      ? "bg-accent cursor-pointer hover:bg-accent-surface"
+                      : isCurrent
+                      ? "bg-accent-surface shadow-[0_0_5px_rgba(154,143,224,0.7)]"
+                      : "bg-raised"
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {/* Area label */}
+          <span className="text-[0.6rem] text-tertiary truncate flex-1 min-w-0 ml-0.5">
+            {areaLabel}
+          </span>
+
+          {/* Step counter */}
+          <span className="text-[0.6rem] text-tertiary tabular-nums flex-shrink-0">
+            {currentStep + 1} / {TOTAL_STEPS}
+          </span>
+        </div>
       </div>
     );
   };
@@ -420,7 +479,7 @@ function QuestionnaireContent() {
         </div>
       )}
 
-      {renderSquares()}
+      {renderProgressBar()}
 
       <div className="flex-grow flex flex-col items-center justify-center gap-4">
         <AnimatePresence mode="wait">
