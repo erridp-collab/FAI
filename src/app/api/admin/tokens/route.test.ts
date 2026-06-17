@@ -2,6 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.stubEnv("ADMIN_PASSWORD", "password-segreta");
 
+const sendEmailMock = vi.fn().mockResolvedValue({ data: { id: "email-1" }, error: null });
+
+vi.mock("resend", () => {
+  const ResendMock = function (this: { emails: { send: typeof sendEmailMock } }) {
+    this.emails = { send: sendEmailMock };
+  };
+  return { Resend: ResendMock };
+});
+
 // Mock per access_tokens
 const tokensOrder = vi.fn();
 const tokensSelect = vi.fn(() => ({ order: tokensOrder }));
@@ -20,7 +29,7 @@ vi.mock("@/utils/supabase/server", () => ({
   getServerSupabase: () => ({ from: fromMock }),
 }));
 
-import { GET } from "@/app/api/admin/tokens/route";
+import { GET, POST } from "@/app/api/admin/tokens/route";
 
 function makeRequest(cookie?: string) {
   return new Request("http://localhost/api/admin/tokens", {
@@ -75,5 +84,50 @@ describe("GET /api/admin/tokens", () => {
     expect(tok1?.status).toBe("unused");
     expect(tok2?.status).toBe("completed");
     expect(tok3?.status).toBe("in_progress");
+  });
+
+  it("ritorna 401 senza cookie admin (POST)", async () => {
+    const request = new Request("http://localhost/api/admin/tokens", {
+      method: "POST",
+      body: JSON.stringify({ notes: "Test", email: "test@test.com" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const response = await POST(request);
+    expect(response.status).toBe(401);
+  });
+
+  it("crea il token, lo salva in DB e invia l'email", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test_key");
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://fai-test.it");
+
+    const insertSingle = vi.fn().mockResolvedValue({
+      data: { id: "tok-new", token: "ALVA-NEWXXX", notes: "Nuovo", email: "nuovo@test.com", created_at: "2026-06-17T00:00:00Z", used_at: null, response_id: null },
+      error: null,
+    });
+    const insertSelect = vi.fn(() => ({ single: insertSingle }));
+    const insertMock = vi.fn(() => ({ select: insertSelect }));
+    fromMock.mockReturnValueOnce({ insert: insertMock });
+
+    const request = new Request("http://localhost/api/admin/tokens", {
+      method: "POST",
+      body: JSON.stringify({ notes: "Nuovo", email: "nuovo@test.com" }),
+      headers: {
+        "Content-Type": "application/json",
+        cookie: "fai_admin_session=password-segreta",
+      },
+    });
+
+    const response = await POST(request);
+    const body = (await response.json()) as { token?: { id: string } };
+
+    expect(response.status).toBe(201);
+    expect(body.token?.id).toBe("tok-new");
+    expect(sendEmailMock).toHaveBeenCalledOnce();
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "nuovo@test.com",
+        subject: "Il tuo accesso alla diagnosi FAI Microimpresa",
+      })
+    );
   });
 });

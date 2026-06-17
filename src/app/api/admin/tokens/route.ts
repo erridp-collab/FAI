@@ -60,3 +60,78 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });
   }
 }
+
+function generateTokenValue(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return "ALVA-" + Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+export async function POST(request: Request) {
+  const authError = requireAdmin(request);
+  if (authError) return authError;
+
+  try {
+    const { notes, email } = (await request.json()) as {
+      notes?: string;
+      email?: string;
+    };
+
+    if (!notes || !email) {
+      return NextResponse.json(
+        { error: "Note ed email sono obbligatorie" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = getServerSupabase();
+
+    // Genera token con retry su collision
+    let tokenRecord: AdminToken | null = null;
+    for (let i = 0; i < 5; i++) {
+      const tokenValue = generateTokenValue();
+      const { data, error } = await supabase
+        .from("access_tokens")
+        .insert([{ token: tokenValue, notes, email }])
+        .select("id, token, notes, email, created_at, used_at, response_id")
+        .single();
+
+      if (!error && data) {
+        tokenRecord = { ...data, status: "unused" };
+        break;
+      }
+    }
+
+    if (!tokenRecord) {
+      return NextResponse.json({ error: "Errore interno" }, { status: 500 });
+    }
+
+    // Invia email via Resend
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+
+    await resend.emails.send({
+      from: "noreply@fai-microimpresa.it",
+      to: email,
+      subject: "Il tuo accesso alla diagnosi FAI Microimpresa",
+      text: [
+        "Ciao,",
+        "hai richiesto l'accesso alla diagnosi gratuita per la tua attività.",
+        "",
+        "Clicca il link qui sotto per iniziare:",
+        `${baseUrl}/start?token=${tokenRecord.token}`,
+        "",
+        "Il link è personale e può essere usato una sola volta.",
+        "",
+        "— Team FAI Microimpresa",
+      ].join("\n"),
+    });
+
+    return NextResponse.json({ token: tokenRecord }, { status: 201 });
+  } catch (err) {
+    console.error("Admin tokens POST error:", err);
+    return NextResponse.json({ error: "Errore interno" }, { status: 500 });
+  }
+}
