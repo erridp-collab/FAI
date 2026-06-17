@@ -33,7 +33,8 @@ CREATE TABLE public.fai_responses (
     area_scores JSONB DEFAULT '{}'::jsonb,
     composite_indicators JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    completed_at TIMESTAMP WITH TIME ZONE -- Null finche' non completato
+    completed_at TIMESTAMP WITH TIME ZONE, -- Null finche' non completato
+    commento_finale TEXT DEFAULT '' NOT NULL
 );
 
 -- Aggiunta della foreign key per access_tokens.response_id (riferimento circolare)
