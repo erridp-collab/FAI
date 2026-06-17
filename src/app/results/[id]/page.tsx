@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -85,6 +85,20 @@ const LEVEL_BAR_COLOR = {
   Vulnerabile: "bg-yellow-400",
   Adeguata: "bg-accent",
   Solida: "bg-green-400",
+};
+
+const LEVEL_BORDER_COLOR: Record<keyof typeof LEVEL_STYLES, string> = {
+  Fragile: "#f87171",
+  Vulnerabile: "#F3CF69",
+  Adeguata: "#9A8FE0",
+  Solida: "#4ade80",
+};
+
+const LEVEL_SCORE_COLOR: Record<keyof typeof LEVEL_STYLES, string> = {
+  Fragile: "#f87171",
+  Vulnerabile: "#F3CF69",
+  Adeguata: "#9A8FE0",
+  Solida: "#4ade80",
 };
 
 export default function ResultsPage() {
@@ -194,17 +208,21 @@ export default function ResultsPage() {
     <div className="min-h-screen bg-canvas text-primary p-4 md:p-8 overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-10">
         {/* Header */}
-        <header className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-accent/20 text-accent-surface px-4 py-2 rounded-full text-sm font-semibold tracking-wider">
-            <CheckCircle2 className="w-4 h-4" /> DIAGNOSI COMPLETATA
+        <header className="relative text-center space-y-4 py-4 overflow-hidden">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,63,140,0.15)_0%,transparent_70%)] pointer-events-none" />
+          <div className="relative z-10 inline-flex items-center gap-2 bg-accent/25 text-accent-surface px-4 py-2 rounded-full text-sm font-semibold tracking-wider border border-accent-surface/30 shadow-[0_0_20px_rgba(74,63,140,0.3)]">
+            <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center text-[9px] font-bold text-white shadow-[0_0_8px_rgba(154,143,224,0.6)]">
+              ✓
+            </div>
+            DIAGNOSI COMPLETATA
           </div>
-          <h1 className="text-3xl md:text-5xl font-medium tracking-tight">
+          <h1 className="relative z-10 text-3xl md:text-5xl font-medium tracking-tight">
             I risultati per <br className="md:hidden" />
             <span className="text-accent-surface font-semibold">
               {data.nome_attivita}
             </span>
           </h1>
-          <p className="text-secondary text-lg max-w-xl mx-auto">
+          <p className="relative z-10 text-secondary text-lg max-w-xl mx-auto">
             Ecco una fotografia immediata della solidità della tua attività, basata
             sulle tue risposte.
           </p>
@@ -314,39 +332,36 @@ export default function ResultsPage() {
                 Sette dimensioni trasversali che emergono dall&apos;insieme delle tue risposte.
               </p>
             </div>
-            <div className="bg-surface border border-raised rounded-2xl overflow-hidden divide-y divide-raised">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {COMPOSITE_META.map(({ key, label, description }) => {
                 const score = compositeIndicators[key];
                 const level = getCompositeLevel(score);
-                const levelStyle = LEVEL_STYLES[level];
+                const borderColor = LEVEL_BORDER_COLOR[level];
+                const scoreColor = LEVEL_SCORE_COLOR[level];
                 const barColor = LEVEL_BAR_COLOR[level];
 
                 return (
-                  <div key={key} className="p-4 sm:p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-semibold text-primary text-sm">{label}</span>
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${levelStyle}`}
-                          >
-                            {level}
-                          </span>
-                        </div>
-                        <p className="text-tertiary text-xs leading-relaxed">{description}</p>
-                      </div>
-                      <div className="flex items-center gap-3 sm:w-36 flex-shrink-0">
-                        <div className="flex-1 bg-raised rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full transition-all ${barColor}`}
-                            style={{ width: `${(score / 5) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold text-primary w-8 text-right">
-                          {score.toFixed(2)}
-                        </span>
-                      </div>
+                  <div
+                    key={key}
+                    className="bg-surface border border-raised rounded-2xl p-4"
+                    style={{ borderLeft: `3px solid ${borderColor}` }}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-primary text-sm">{label}</span>
+                      <span
+                        className="text-base font-extrabold tabular-nums"
+                        style={{ color: scoreColor }}
+                      >
+                        {score.toFixed(2)}
+                      </span>
                     </div>
+                    <div className="w-full bg-raised rounded-full h-[3px] mb-2">
+                      <div
+                        className={`h-[3px] rounded-full transition-all ${barColor}`}
+                        style={{ width: `${(score / 5) * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-tertiary text-xs leading-relaxed">{description}</p>
                   </div>
                 );
               })}
@@ -355,16 +370,37 @@ export default function ResultsPage() {
         )}
 
         {/* Email CTA */}
-        <div className="bg-gradient-to-r from-accent to-raised p-7 md:p-8 rounded-3xl border border-accent-surface/30 shadow-2xl relative overflow-hidden">
-          <div className="absolute -right-10 -top-10 w-32 h-32 bg-accent blur-3xl opacity-50 pointer-events-none" />
-
-          <h2 className="text-xl md:text-2xl font-semibold mb-3">Il tuo report completo è in arrivo</h2>
-          <p className="text-primary/90 max-w-2xl text-base md:text-lg leading-relaxed">
-            Stiamo elaborando tutti i dati raccolti. Riceverai un report dettagliato e
-            personalizzato all&apos;indirizzo email{" "}
-            <span className="font-semibold text-white">{data.email}</span> entro{" "}
-            <span className="text-gold font-bold">3 giorni lavorativi</span>.
-          </p>
+        <div className="bg-surface border border-accent-surface/20 rounded-2xl p-6 flex gap-4 items-start">
+          <div className="w-10 h-10 rounded-xl bg-accent/30 border border-accent-surface/20 flex items-center justify-center text-xl flex-shrink-0">
+            📬
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold mb-1">
+              Report in arrivo a{" "}
+              <span className="text-accent-surface">{data.email}</span>
+            </h2>
+            <p className="text-secondary text-sm leading-relaxed">
+              Stiamo elaborando tutti i dati raccolti. Riceverai un report dettagliato e
+              personalizzato entro{" "}
+              <span className="text-gold font-bold">3 giorni lavorativi</span>.
+            </p>
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs text-tertiary">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent-surface shadow-[0_0_5px_rgba(154,143,224,0.6)]" />
+                Diagnosi completata
+              </div>
+              <span className="text-tertiary text-xs">→</span>
+              <div className="flex items-center gap-1.5 text-xs text-tertiary">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                Elaborazione
+              </div>
+              <span className="text-tertiary text-xs">→</span>
+              <div className="flex items-center gap-1.5 text-xs text-tertiary">
+                <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                Report via email
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
