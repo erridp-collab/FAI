@@ -8,6 +8,7 @@ type FinalData = {
   settore: string;
   citta: string;
   email: string;
+  commento_finale: string;
 };
 
 type SaveProgressRequest = {
@@ -38,6 +39,7 @@ type SaveProgressPayload = {
   settore?: string;
   citta?: string;
   email?: string;
+  commento_finale?: string;
   area_scores?: Record<string, number>;
   composite_indicators?: CompositeIndicators;
   completed_at?: string | null;
@@ -100,6 +102,7 @@ export async function POST(request: Request) {
       payload.settore = finalData?.settore;
       payload.citta = finalData?.citta;
       payload.email = finalData?.email;
+      payload.commento_finale = finalData?.commento_finale ?? "";
       payload.area_scores = areaScores;
       payload.composite_indicators = compositeIndicators;
       payload.completed_at = completedAt;
