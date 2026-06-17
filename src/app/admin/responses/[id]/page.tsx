@@ -64,7 +64,12 @@ export default function AdminResponsePage() {
   useEffect(() => {
     if (!responseId) return;
     void fetch(`/api/admin/responses/${responseId}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok && r.headers.get("content-type")?.includes("application/json") === false) {
+          throw new Error(`Errore server: ${r.status}`);
+        }
+        return r.json();
+      })
       .then((body: { data?: ResultsData; error?: string }) => {
         if (body.data) {
           setData(body.data);

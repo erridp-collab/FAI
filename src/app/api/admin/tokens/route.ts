@@ -110,9 +110,13 @@ export async function POST(request: Request) {
     // Invia email via Resend
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      console.error("NEXT_PUBLIC_BASE_URL is not set");
+      return NextResponse.json({ error: "Configurazione server incompleta" }, { status: 500 });
+    }
 
-    await resend.emails.send({
+    const emailResult = await resend.emails.send({
       from: "noreply@fai-microimpresa.it",
       to: email,
       subject: "Il tuo accesso alla diagnosi FAI Microimpresa",
@@ -128,6 +132,11 @@ export async function POST(request: Request) {
         "— Team FAI Microimpresa",
       ].join("\n"),
     });
+
+    if (emailResult.error) {
+      console.error("Resend error:", emailResult.error);
+      return NextResponse.json({ error: "Errore invio email" }, { status: 500 });
+    }
 
     return NextResponse.json({ token: tokenRecord }, { status: 201 });
   } catch (err) {
