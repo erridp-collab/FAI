@@ -8,6 +8,7 @@ CREATE TABLE public.access_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token TEXT UNIQUE NOT NULL,
     notes TEXT, -- Uso admin (es. "Cliente: Mario Rossi - 08/06/2026")
+    email TEXT, -- Email destinatario, impostata al momento della creazione
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     used_at TIMESTAMP WITH TIME ZONE, -- Null finche' non completato
     response_id UUID -- FK a fai_responses, settato alla fine
@@ -55,3 +56,10 @@ ALTER TABLE public.fai_responses ENABLE ROW LEVEL SECURITY;
 -- Tutte le operazioni passano da API server-side con service role.
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.access_tokens;
 DROP POLICY IF EXISTS "Enable all access for responses" ON public.fai_responses;
+
+-- ==============================================================================
+-- MIGRAZIONI PENDENTI (da applicare quando il DB è attivo)
+-- ==============================================================================
+
+-- Aggiunge email destinatario ad access_tokens (admin dashboard)
+-- ALTER TABLE public.access_tokens ADD COLUMN IF NOT EXISTS email TEXT;
