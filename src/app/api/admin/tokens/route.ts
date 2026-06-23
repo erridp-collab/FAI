@@ -119,7 +119,7 @@ export async function POST(request: Request) {
     const emailResult = await resend.emails.send({
       from: "noreply@fai-microimpresa.it",
       to: email,
-      subject: "Il tuo accesso alla diagnosi FAI Microimpresa",
+      subject: "Il tuo accesso alla Diagnosi di solidità",
       text: [
         "Ciao,",
         "hai richiesto l'accesso alla diagnosi gratuita per la tua attività.",
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
         "",
         "Il link è personale e può essere usato una sola volta.",
         "",
-        "— Team FAI Microimpresa",
+        "— Team Alvaland",
       ].join("\n"),
     });
 

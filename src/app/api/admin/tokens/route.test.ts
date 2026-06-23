@@ -126,7 +126,7 @@ describe("GET /api/admin/tokens", () => {
     expect(sendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "nuovo@test.com",
-        subject: "Il tuo accesso alla diagnosi FAI Microimpresa",
+        subject: "Il tuo accesso alla Diagnosi di solidità",
       })
     );
   });

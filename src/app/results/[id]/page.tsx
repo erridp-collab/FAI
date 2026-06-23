@@ -363,35 +363,69 @@ export default function ResultsPage() {
         )}
 
         {/* Email CTA */}
-        <div className="bg-surface border border-accent-surface/20 rounded-2xl p-6 flex gap-4 items-start">
-          <div className="w-10 h-10 rounded-xl bg-accent/30 border border-accent-surface/20 flex items-center justify-center text-xl flex-shrink-0">
-            📬
+        <div>
+          {/* Separatore narrativo */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, #3A3550)" }} />
+            <span className="text-tertiary text-xs font-bold uppercase tracking-widest">cosa succede ora</span>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, #3A3550, transparent)" }} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold mb-1">
-              Report in arrivo a{" "}
-              <span className="text-accent-surface">{data.email}</span>
-            </h2>
-            <p className="text-secondary text-sm leading-relaxed">
-              Stiamo elaborando tutti i dati raccolti. Riceverai un report dettagliato e
-              personalizzato entro{" "}
+
+          <div
+            className="rounded-2xl p-6"
+            style={{
+              background: "linear-gradient(160deg, rgba(74,63,140,0.22) 0%, rgba(74,63,140,0.08) 50%, rgba(45,42,62,0.6) 100%)",
+              border: "1px solid rgba(154,143,224,0.3)",
+              boxShadow: "0 0 40px rgba(74,63,140,0.25), 0 8px 32px rgba(0,0,0,0.5)",
+            }}
+          >
+            {/* Header: icona + titolo affiancati */}
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                style={{
+                  background: "rgba(74,63,140,0.5)",
+                  border: "1px solid rgba(154,143,224,0.35)",
+                  boxShadow: "0 0 20px rgba(154,143,224,0.25)",
+                }}
+              >
+                📬
+              </div>
+              <h2 className="text-lg font-bold leading-snug">
+                Report in arrivo a{" "}
+                <span className="text-accent-surface">{data.email}</span>
+              </h2>
+            </div>
+
+            <p className="text-sm leading-relaxed mb-5" style={{ color: "rgba(237,232,255,0.65)" }}>
+              Stiamo elaborando tutti i dati raccolti. Riceverai un report dettagliato entro{" "}
               <span className="text-gold font-bold">3 giorni lavorativi</span>.
             </p>
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs text-tertiary">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-surface shadow-[0_0_5px_rgba(154,143,224,0.6)]" />
-                Diagnosi completata
-              </div>
-              <span className="text-tertiary text-xs">→</span>
-              <div className="flex items-center gap-1.5 text-xs text-tertiary">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                Elaborazione
-              </div>
-              <span className="text-tertiary text-xs">→</span>
-              <div className="flex items-center gap-1.5 text-xs text-tertiary">
-                <div className="w-1.5 h-1.5 rounded-full bg-gold" />
-                Report via email
-              </div>
+
+            {/* Timeline in box */}
+            <div
+              className="flex rounded-xl overflow-hidden"
+              style={{
+                background: "rgba(58,53,80,0.5)",
+                border: "1px solid rgba(154,143,224,0.15)",
+              }}
+            >
+              {[
+                { dot: "bg-accent-surface shadow-[0_0_8px_rgba(154,143,224,0.7)]", label: "Diagnosi", color: "text-accent-surface font-semibold", bg: "rgba(154,143,224,0.12)" },
+                { dot: "bg-accent shadow-[0_0_8px_rgba(74,63,140,0.6)]",           label: "Elaborazione", color: "text-primary",        bg: "rgba(74,63,140,0.15)" },
+                { dot: "bg-gold shadow-[0_0_8px_rgba(243,207,105,0.4)]",           label: "Report email", color: "text-gold",           bg: "transparent" },
+              ].map((step, i, arr) => (
+                <div key={step.label} className="flex items-stretch">
+                  <div
+                    className="flex flex-col items-center gap-1.5 py-3 px-4"
+                    style={{ background: step.bg }}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${step.dot}`} />
+                    <span className={`text-[10px] ${step.color}`}>{step.label}</span>
+                  </div>
+                  {i < arr.length - 1 && <div className="w-px self-stretch bg-raised" />}
+                </div>
+              ))}
             </div>
           </div>
         </div>
