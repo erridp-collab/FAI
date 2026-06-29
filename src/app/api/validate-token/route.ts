@@ -6,8 +6,9 @@ import { getTokensTable } from "@/utils/test-mode";
 export async function POST(request: Request) {
   try {
     const { token } = (await request.json()) as { token?: string };
+    const normalizedToken = token?.trim().toUpperCase();
 
-    if (!token) {
+    if (!normalizedToken) {
       return NextResponse.json({ error: "Token mancante" }, { status: 400 });
     }
 
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
     const { data: testTokenData, error: testTokenError } = await supabase
       .from(getTokensTable(true))
       .select("id, is_active")
-      .eq("token", token)
+      .eq("token", normalizedToken)
       .single();
 
     if (!testTokenError && testTokenData && testTokenData.is_active !== false) {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     const { data: tokenData, error } = await supabase
       .from(getTokensTable(false))
       .select("id, response_id")
-      .eq("token", token)
+      .eq("token", normalizedToken)
       .single();
 
     if (error || !tokenData) {
