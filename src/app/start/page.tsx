@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 type ValidateTokenResponse = {
   ok?: boolean;
   tokenId?: string;
+  mode?: "test" | "prod";
   error?: "used" | "invalid" | string;
 };
 
@@ -33,6 +34,15 @@ function StartContent() {
         if (res.ok && data.ok && data.tokenId) {
           sessionStorage.setItem("fai_token", token);
           sessionStorage.setItem("fai_token_id", data.tokenId);
+          if (data.mode === "test") {
+            sessionStorage.setItem("fai_test_mode", "1");
+            sessionStorage.removeItem("fai_test_response_id");
+            router.push("/questionnaire");
+            return;
+          }
+
+          sessionStorage.removeItem("fai_test_mode");
+          sessionStorage.removeItem("fai_test_response_id");
           router.push("/questionnaire");
           return;
         }

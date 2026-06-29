@@ -85,10 +85,13 @@ function getMissingMainQuestionNumbers(answersMain: Record<number, number>) {
 function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const devMode = process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1" && searchParams.get("dev") === "1";
+  const localDevMode =
+    process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1" && searchParams.get("dev") === "1";
 
-  const [tokenId, setTokenId] = useState<string | null>(() => (devMode ? "__dev__" : null));
-  const [isInitializing, setIsInitializing] = useState(() => !devMode);
+  const [tokenId, setTokenId] = useState<string | null>(null);
+  const [responseId, setResponseId] = useState<string | null>(null);
+  const [isTestSession, setIsTestSession] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -110,12 +113,84 @@ function QuestionnaireContent() {
   const [preoccupazioneComment, setPreoccupazioneComment] = useState<string>("");
 
   useEffect(() => {
-    if (devMode) {
+    const storedTokenId = sessionStorage.getItem("fai_token_id");
+    const storedResponseId = sessionStorage.getItem("fai_test_response_id");
+    const hasTestSession = sessionStorage.getItem("fai_test_mode") === "1";
+
+    if (storedTokenId && hasTestSession) {
+      setTokenId(storedTokenId);
+      setResponseId(storedResponseId);
+      setIsTestSession(true);
+
+      if (!storedResponseId) {
+        setIsInitializing(false);
+        return;
+      }
+
+      const loadProgress = async () => {
+        try {
+          const res = await fetch(`/api/save-progress?tokenId=${storedTokenId}&responseId=${storedResponseId}&test=1`);
+          const data = (await res.json()) as SaveProgressGetResponse;
+
+          if (data.ok && data.data) {
+            const loaded = data.data;
+            setAnswersPercezione(loaded.answers_percezione || {});
+            setAnswersObiettivi(loaded.answers_obiettivi || []);
+            setAnswersMain(loaded.answers_main || {});
+            setCommentsPercezione(loaded.comments_percezione || {});
+            setCommentsMain(loaded.comments_main || {});
+            setObjectivesComments(loaded.objectives_comments || {});
+            setPreoccupazione(loaded.preoccupazione || null);
+            setPreoccupazioneComment(loaded.preoccupazione_comment || "");
+
+            if (loaded.completed_at) {
+              router.push(`/results/${loaded.id}`);
+              return;
+            }
+
+            const perceptionCount = Object.keys(loaded.answers_percezione || {}).length;
+
+            if (perceptionCount < N_PERCEPTION) {
+              setCurrentStep(perceptionCount);
+              return;
+            }
+
+            if ((loaded.answers_obiettivi || []).length < 3) {
+              setCurrentStep(STEP_OBJECTIVES);
+              return;
+            }
+
+            if (!loaded.preoccupazione) {
+              setCurrentStep(STEP_PREOCCUPAZIONE);
+              return;
+            }
+
+            const mainCount = Object.keys(loaded.answers_main || {}).length;
+
+            if (mainCount === 0) {
+              setCurrentStep(STEP_TRANSITION);
+              return;
+            }
+
+            setCurrentStep(mainCount < N_MAIN ? STEP_MAIN_START + mainCount : STEP_FINAL);
+          }
+        } finally {
+          setIsInitializing(false);
+        }
+      };
+
+      void loadProgress();
       return;
     }
 
+    if (localDevMode) {
+        setTokenId("__dev__");
+        setIsTestSession(false);
+        setIsInitializing(false);
+        return;
+    }
+
     const token = sessionStorage.getItem("fai_token");
-    const storedTokenId = sessionStorage.getItem("fai_token_id");
 
     if (!token || !storedTokenId) {
       router.push("/");
@@ -125,6 +200,7 @@ function QuestionnaireContent() {
     const loadProgress = async () => {
       try {
         setTokenId(storedTokenId);
+        setIsTestSession(false);
         const res = await fetch(`/api/save-progress?tokenId=${storedTokenId}`);
         const data = (await res.json()) as SaveProgressGetResponse;
 
@@ -176,7 +252,7 @@ function QuestionnaireContent() {
     };
 
     void loadProgress();
-  }, [devMode, router]);
+  }, [localDevMode, router]);
 
   const saveProgress = async (
     isFinal = false,
@@ -195,6 +271,8 @@ function QuestionnaireContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tokenId,
+          responseId,
+          isTestMode: isTestSession,
           answers_percezione: overrides?.percezione ?? answersPercezione,
           answers_obiettivi: answersObiettivi,
           answers_main: overrides?.main ?? answersMain,
@@ -212,6 +290,11 @@ function QuestionnaireContent() {
 
       if (!res.ok) {
         throw new Error(data.error || "Errore di salvataggio");
+      }
+
+      if (isTestSession && data.responseId) {
+        setResponseId(data.responseId);
+        sessionStorage.setItem("fai_test_response_id", data.responseId);
       }
 
       return data.responseId || null;
@@ -481,9 +564,11 @@ function QuestionnaireContent() {
 
   return (
     <div className="min-h-screen bg-canvas text-primary p-4 md:p-8 flex flex-col">
-      {devMode && (
+      {(localDevMode || isTestSession) && (
         <div className="text-center text-xs text-gold bg-gold/10 border border-gold/20 rounded-md px-3 py-1.5 mb-4 max-w-3xl mx-auto w-full">
-          Modalità sviluppo attiva — i dati non vengono salvati nel database
+          {isTestSession
+            ? "Modalità test attiva — i dati vengono salvati nel database di test"
+            : "Modalità sviluppo attiva — i dati non vengono salvati nel database"}
         </div>
       )}
 

@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getCompositeLevel, type CompositeIndicators } from "@/utils/scoring";
+import { TEST_MODE_HEADER } from "@/utils/test-mode";
 
 type AreaDefinition = {
   area: string;
@@ -119,6 +120,13 @@ export default function ResultsPage() {
     const raw = sessionStorage.getItem("fai_dev_results");
     return raw ? (JSON.parse(raw) as ResultsData) : null;
   }, [isDevResult]);
+  const isTestSession = useMemo(() => {
+    if (typeof window === "undefined" || isDevResult) {
+      return false;
+    }
+
+    return sessionStorage.getItem("fai_test_mode") === "1";
+  }, [isDevResult]);
 
   useEffect(() => {
     if (!responseId || isDevResult) {
@@ -133,6 +141,7 @@ export default function ResultsPage() {
       const response = await fetch(`/api/results/${responseId}`, {
         headers: {
           "x-fai-token-id": sessionTokenId,
+          [TEST_MODE_HEADER]: isTestSession ? "1" : "0",
         },
       });
 
@@ -148,7 +157,7 @@ export default function ResultsPage() {
     };
 
     void loadResults();
-  }, [isDevResult, responseId, sessionTokenId]);
+  }, [isDevResult, isTestSession, responseId, sessionTokenId]);
 
   const data = isDevResult ? devData : remoteData;
   const missingSessionToken = !isDevResult && !sessionTokenId;

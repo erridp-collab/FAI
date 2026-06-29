@@ -1,20 +1,30 @@
 import { NextResponse } from "next/server";
 
 import { getServerSupabase } from "@/utils/supabase/server";
+import { getTokensTable } from "@/utils/test-mode";
 
 export async function POST(request: Request) {
   try {
-    const { token } = await request.json();
+    const { token } = (await request.json()) as { token?: string };
 
     if (!token) {
       return NextResponse.json({ error: "Token mancante" }, { status: 400 });
     }
 
-    // 1. Cerca token in access_tokens
     const supabase = getServerSupabase();
 
+    const { data: testTokenData, error: testTokenError } = await supabase
+      .from(getTokensTable(true))
+      .select("id, is_active")
+      .eq("token", token)
+      .single();
+
+    if (!testTokenError && testTokenData && testTokenData.is_active !== false) {
+      return NextResponse.json({ ok: true, tokenId: testTokenData.id, mode: "test" });
+    }
+
     const { data: tokenData, error } = await supabase
-      .from("access_tokens")
+      .from(getTokensTable(false))
       .select("id, response_id")
       .eq("token", token)
       .single();
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // Trovato e valido, non ancora completato
-    return NextResponse.json({ ok: true, tokenId: tokenData.id });
+    return NextResponse.json({ ok: true, tokenId: tokenData.id, mode: "prod" });
 
   } catch (err) {
     console.error("Token validation error:", err);

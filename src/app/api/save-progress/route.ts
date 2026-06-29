@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { calculateResults, type CompositeIndicators } from "@/utils/scoring";
 import { getServerSupabase } from "@/utils/supabase/server";
+import { getResponsesTable, isTestModeValue } from "@/utils/test-mode";
 
 type FinalData = {
   nome_attivita: string;
@@ -13,6 +14,8 @@ type FinalData = {
 
 type SaveProgressRequest = {
   tokenId?: string;
+  responseId?: string;
+  isTestMode?: boolean;
   answers_percezione?: Record<string, number>;
   answers_obiettivi?: string[];
   answers_main?: Record<number, number>;
@@ -51,6 +54,8 @@ export async function POST(request: Request) {
     const body = (await request.json()) as SaveProgressRequest;
     const {
       tokenId,
+      responseId: requestedResponseId,
+      isTestMode,
       answers_percezione,
       answers_obiettivi,
       answers_main,
@@ -62,18 +67,14 @@ export async function POST(request: Request) {
       preoccupazione,
       preoccupazione_comment,
     } = body;
+    const useTestMode = isTestModeValue(isTestMode);
+    const responsesTable = getResponsesTable(useTestMode);
 
     if (!tokenId) {
       return NextResponse.json({ error: "tokenId mancante" }, { status: 400 });
     }
 
-    const { data: existing } = await supabase
-      .from("fai_responses")
-      .select("id")
-      .eq("token_id", tokenId)
-      .single();
-
-    let responseId = existing?.id;
+    let responseId = requestedResponseId ?? null;
     let areaScores: Record<string, number> | undefined;
     let compositeIndicators: CompositeIndicators | undefined;
     let completedAt: string | null = null;
@@ -108,9 +109,45 @@ export async function POST(request: Request) {
       payload.completed_at = completedAt;
     }
 
+    if (useTestMode) {
+      if (responseId) {
+        const { error: updateError } = await supabase
+          .from(responsesTable)
+          .update(payload)
+          .eq("id", responseId)
+          .eq("token_id", tokenId);
+
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        const { data: insertData, error: insertError } = await supabase
+          .from(responsesTable)
+          .insert([payload])
+          .select("id")
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        responseId = insertData.id;
+      }
+
+      return NextResponse.json({ ok: true, responseId });
+    }
+
+    const { data: existing } = await supabase
+      .from(responsesTable)
+      .select("id")
+      .eq("token_id", tokenId)
+      .single();
+
+    responseId = existing?.id ?? responseId;
+
     if (responseId) {
       const { error: updateError } = await supabase
-        .from("fai_responses")
+        .from(responsesTable)
         .update(payload)
         .eq("id", responseId);
 
@@ -119,7 +156,7 @@ export async function POST(request: Request) {
       }
     } else {
       const { data: insertData, error: insertError } = await supabase
-        .from("fai_responses")
+        .from(responsesTable)
         .insert([payload])
         .select("id")
         .single();
@@ -149,17 +186,23 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const tokenId = searchParams.get("tokenId");
+    const responseId = searchParams.get("responseId");
+    const isTestMode = isTestModeValue(searchParams.get("test"));
+    const responsesTable = getResponsesTable(isTestMode);
 
     if (!tokenId) {
       return NextResponse.json({ error: "tokenId mancante" }, { status: 400 });
     }
 
+    if (isTestMode && !responseId) {
+      return NextResponse.json({ ok: true, data: null });
+    }
+
     const supabase = getServerSupabase();
-    const { data, error } = await supabase
-      .from("fai_responses")
-      .select("*")
-      .eq("token_id", tokenId)
-      .maybeSingle();
+    const query = supabase.from(responsesTable).select("*").eq("token_id", tokenId);
+    const { data, error } = isTestMode
+      ? await query.eq("id", responseId as string).maybeSingle()
+      : await query.maybeSingle();
 
     if (error) {
       return NextResponse.json({ error: "Errore interno" }, { status: 500 });

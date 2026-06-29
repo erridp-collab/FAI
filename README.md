@@ -12,10 +12,10 @@ Web app Next.js per la diagnosi di microimprese commerciali e ricettive tramite 
 ## Flusso principale
 
 - `/` landing iniziale
-- `/start?token=...` validazione token
+- `/start?token=...` validazione token e instradamento automatico su ramo reale o test
 - `/questionnaire` compilazione questionario
 - `/results/[id]` risultati finali
-- `/questionnaire?dev=1` flusso locale senza dipendenza dal database
+- `/questionnaire?dev=1` fallback locale di sviluppo senza dipendenza dal database
 
 ## Comandi utili
 
@@ -37,9 +37,12 @@ Per il flusso completo server-side:
 
 In `dev mode` il questionario puo essere testato anche senza database.
 
+Per il flusso di test condiviso con salvataggio su Supabase, usa sempre `/start?token=...`.
+
 ## Documentazione utile
 
 - `CLAUDE.md` contesto operativo del progetto
+- `docs/test-mode.md` guida operativa del flusso test condiviso
 - `docs/product-readiness/REFERENCE.md` fonte di verita estratta dall'Excel
 - `docs/product-readiness/BACKLOG.md` backlog dei miglioramenti
 - `docs/superpowers/specs/` specifiche storiche di design e product-readiness

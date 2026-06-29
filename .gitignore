@@ -59,3 +59,6 @@ fai-web/.superpowers/
 fai-web/.vercel/
 fai-web/.env*
 fai-web/*.tsbuildinfo
+
+# supabase local metadata
+supabase/.temp/
