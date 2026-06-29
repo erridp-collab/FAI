@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getServerSupabase } from "@/utils/supabase/server";
+import { getResponsesTable, isTestModeValue, TEST_MODE_HEADER } from "@/utils/test-mode";
 
 function getResponseIdFromRequest(request: Request): string | null {
   const pathname = new URL(request.url).pathname;
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
     const supabase = getServerSupabase();
     const responseId = getResponseIdFromRequest(request);
     const tokenId = request.headers.get("x-fai-token-id");
+    const isTestMode = isTestModeValue(request.headers.get(TEST_MODE_HEADER));
 
     if (!responseId) {
       return NextResponse.json({ error: "responseId mancante" }, { status: 400 });
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
     }
 
     const { data, error } = await supabase
-      .from("fai_responses")
+      .from(getResponsesTable(isTestMode))
       .select("id, email, nome_attivita, area_scores, composite_indicators, completed_at, token_id")
       .eq("id", responseId)
       .eq("token_id", tokenId)

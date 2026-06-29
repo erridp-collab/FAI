@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.stubEnv("NEXT_PUBLIC_ALLOW_DEV_MODE", "1");
+
 const maybeSingle = vi.fn();
 const not = vi.fn(() => ({ maybeSingle }));
 const eqTokenId = vi.fn(() => ({ not }));
@@ -84,5 +86,32 @@ describe("GET /api/results/[id]", () => {
 
     expect(response.status).toBe(404);
     expect(payload.error).toBe("Risultati non trovati");
+  });
+
+  it("usa la tabella test quando arriva l'header di test mode", async () => {
+    maybeSingle.mockResolvedValueOnce({
+      data: {
+        id: "resp-test-1",
+        email: "tester@example.com",
+        nome_attivita: "Tester Srl",
+        area_scores: { "La tua voce": 4.1 },
+      },
+      error: null,
+    });
+
+    const request = new Request("http://localhost:3000/api/results/resp-test-1", {
+      headers: {
+        "x-fai-token-id": "token-test-123",
+        "x-fai-test-mode": "1",
+      },
+    });
+
+    const response = await GET(request);
+    const payload = (await response.json()) as { ok?: boolean; data?: { id: string } };
+
+    expect(response.status).toBe(200);
+    expect(payload.ok).toBe(true);
+    expect(payload.data?.id).toBe("resp-test-1");
+    expect(from).toHaveBeenCalledWith("fai_responses_test");
   });
 });
