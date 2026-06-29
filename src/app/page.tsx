@@ -142,6 +142,38 @@ export default function Home() {
             </a>
           </div>
           <p className="relative z-10 text-tertiary text-xs">oppure inserisci direttamente il tuo link</p>
+          <form
+            action="/start"
+            method="get"
+            className="relative z-10 max-w-xl mx-auto w-full space-y-3"
+          >
+            <label
+              htmlFor="token"
+              className="block text-left text-tertiary text-xs uppercase tracking-wider"
+            >
+              Inserisci il tuo token
+            </label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                id="token"
+                name="token"
+                type="text"
+                required
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="ALVA-XXXXXXXX"
+                className="flex-1 rounded-xl border border-raised bg-canvas/80 px-4 py-3 text-sm text-primary placeholder:text-tertiary outline-none transition-colors focus:border-accent-surface"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-accent px-5 py-3 text-sm font-bold text-white shadow-[0_4px_16px_rgba(74,63,140,0.4)] transition-colors hover:bg-accent/80"
+              >
+                Accedi
+              </button>
+            </div>
+          </form>
           <div className="relative z-10 flex justify-center">
             <code className="bg-raised/50 border border-raised text-accent-surface text-xs px-4 py-2 rounded-lg">
               fai-microimpresa.it/start?token=ALVA-XXXXXXXX

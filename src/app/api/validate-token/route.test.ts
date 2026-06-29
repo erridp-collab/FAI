@@ -46,6 +46,28 @@ describe("POST /api/validate-token", () => {
     expect(eq).toHaveBeenCalledWith("token", "FAI-TEST-ALVA-001");
   });
 
+  it("normalizza il token prima di validarlo", async () => {
+    single.mockResolvedValueOnce({
+      data: { id: "test-token-1", is_active: true },
+      error: null,
+    });
+
+    const request = new Request("http://localhost/api/validate-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: "  fai-test-alva-001  ",
+      }),
+    });
+
+    const response = await POST(request);
+    const payload = (await response.json()) as { ok?: boolean; tokenId?: string; mode?: string };
+
+    expect(response.status).toBe(200);
+    expect(payload.ok).toBe(true);
+    expect(eq).toHaveBeenCalledWith("token", "FAI-TEST-ALVA-001");
+  });
+
   it("prosegue al flusso reale se il token test e inattivo o assente", async () => {
     single.mockResolvedValueOnce({
       data: { id: "test-token-1", is_active: false },
