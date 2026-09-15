@@ -7,6 +7,7 @@ test("il flusso dev mode arriva fino ai risultati", async ({ page }) => {
 
   for (let index = 0; index < 7; index++) {
     await page.getByRole("button", { name: "Seleziona punteggio 3 su 5" }).click();
+    await page.getByRole("button", { name: "Avanti →" }).click();
     await page.waitForTimeout(350);
   }
 
@@ -25,6 +26,7 @@ test("il flusso dev mode arriva fino ai risultati", async ({ page }) => {
 
   for (let index = 0; index < 33; index++) {
     await page.getByRole("button", { name: "Seleziona punteggio 3 su 5" }).click();
+    await page.getByRole("button", { name: "Avanti →" }).click();
     await page.waitForTimeout(350);
   }
 

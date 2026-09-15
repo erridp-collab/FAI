@@ -30,6 +30,16 @@ const AREA_DEFINITIONS = [
   { area: "Il tuo apprendimento", definition: "Capacità di evolvere, sperimentare e imparare dall'esterno." },
 ];
 
+const CHART_LABELS: Record<string, string> = {
+  "La tua voce": "Voce",
+  "I tuoi ricavi": "Ricavi",
+  "I tuoi margini": "Margini",
+  "La tua adattabilità": "Adattabilità",
+  "Il tuo sistema": "Sistema",
+  "La tua rete": "Rete",
+  "Il tuo apprendimento": "Crescita",
+};
+
 const COMPOSITE_META: { key: keyof CompositeIndicators; label: string; description: string }[] = [
   { key: "identita", label: "Identità", description: "Riconoscibilità e differenziazione sul mercato" },
   { key: "tenutaAttivita", label: "Sopravvivenza", description: "Stabilità finanziaria e capacità di generare ricavi" },
@@ -165,9 +175,13 @@ export default function AdminResponsePage() {
           <h2 className="text-xl font-medium mb-6 text-center">La mappa della solidità</h2>
           <div className="w-full h-[300px] sm:h-[380px] md:h-[450px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
+              <RadarChart cx="50%" cy="50%" outerRadius="58%" data={chartData}>
                 <PolarGrid stroke="#3A3550" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: "#9490B8", fontSize: 11, fontWeight: 500 }} />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fill: "#9490B8", fontSize: 11, fontWeight: 500 }}
+                  tickFormatter={(subject: string) => CHART_LABELS[subject] ?? subject}
+                />
                 <Radar
                   name={data.nome_attivita ?? ""}
                   dataKey="score"

@@ -496,7 +496,7 @@ function QuestionnaireContent() {
 
     return (
       <div className="mb-6 max-w-4xl mx-auto w-full">
-        <div className="flex items-center gap-2.5 bg-surface border border-raised rounded-lg px-3 py-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-2.5 gap-y-1.5 bg-surface border border-raised rounded-lg px-3 py-2">
           {/* Phase pills */}
           <div className="flex gap-1.5 items-center flex-shrink-0">
             {([1, 2, 3, 4] as const).map((phase) => {
@@ -549,12 +549,12 @@ function QuestionnaireContent() {
           </div>
 
           {/* Area label */}
-          <span className="text-[0.6rem] text-tertiary truncate flex-1 min-w-0 ml-0.5">
+          <span className="order-2 basis-full text-center text-[0.6rem] text-tertiary sm:order-none sm:basis-auto sm:flex-1 sm:min-w-0 sm:ml-0.5 sm:text-left">
             {areaLabel}
           </span>
 
           {/* Step counter */}
-          <span className="text-[0.6rem] text-tertiary tabular-nums flex-shrink-0">
+          <span className="order-1 ml-auto text-[0.6rem] text-tertiary tabular-nums flex-shrink-0 sm:order-none sm:ml-0">
             {currentStep + 1} / {TOTAL_STEPS}
           </span>
         </div>

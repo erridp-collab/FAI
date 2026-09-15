@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useParams } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import {
@@ -64,6 +64,36 @@ const AREA_DEFINITIONS: AreaDefinition[] = [
   },
 ];
 
+const CHART_LABELS: Record<string, string> = {
+  "La tua voce": "Voce",
+  "I tuoi ricavi": "Ricavi",
+  "I tuoi margini": "Margini",
+  "La tua adattabilità": "Adattabilità",
+  "Il tuo sistema": "Sistema",
+  "La tua rete": "Rete",
+  "Il tuo apprendimento": "Crescita",
+};
+
+const subscribeToSessionStorage = () => () => {};
+const getServerSessionSnapshot = () => null;
+const getServerHydrationSnapshot = () => false;
+
+function useSessionStorageValue(key: string) {
+  return useSyncExternalStore(
+    subscribeToSessionStorage,
+    () => sessionStorage.getItem(key),
+    getServerSessionSnapshot,
+  );
+}
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToSessionStorage,
+    () => true,
+    getServerHydrationSnapshot,
+  );
+}
+
 const COMPOSITE_META: { key: keyof CompositeIndicators; label: string; description: string }[] = [
   { key: "identita", label: "Identità", description: "Riconoscibilità e differenziazione sul mercato" },
   { key: "tenutaAttivita", label: "Sopravvivenza", description: "Stabilità finanziaria e capacità di generare ricavi" },
@@ -101,35 +131,29 @@ export default function ResultsPage() {
   const isDevResult =
     process.env.NEXT_PUBLIC_ALLOW_DEV_MODE === "1" && responseId === "__dev__";
 
-  const [remoteData, setRemoteData] = useState<ResultsData | null>(null);
-  const [isLoading, setIsLoading] = useState(!isDevResult);
-  const [error, setError] = useState<string | null>(null);
-  const sessionTokenId = useMemo(() => {
-    if (isDevResult || typeof window === "undefined") {
-      return null;
-    }
-
-    return sessionStorage.getItem("fai_token_id");
-  }, [isDevResult]);
-
+  const hasHydrated = useHasHydrated();
+  const storedTokenId = useSessionStorageValue("fai_token_id");
+  const storedTestMode = useSessionStorageValue("fai_test_mode");
+  const rawDevData = useSessionStorageValue("fai_dev_results");
+  const sessionTokenId = isDevResult ? null : storedTokenId;
+  const isTestSession = !isDevResult && storedTestMode === "1";
   const devData = useMemo(() => {
-    if (!isDevResult || typeof window === "undefined") {
+    if (!isDevResult || !rawDevData) {
       return null;
     }
 
-    const raw = sessionStorage.getItem("fai_dev_results");
-    return raw ? (JSON.parse(raw) as ResultsData) : null;
-  }, [isDevResult]);
-  const isTestSession = useMemo(() => {
-    if (typeof window === "undefined" || isDevResult) {
-      return false;
+    try {
+      return JSON.parse(rawDevData) as ResultsData;
+    } catch {
+      return null;
     }
-
-    return sessionStorage.getItem("fai_test_mode") === "1";
-  }, [isDevResult]);
+  }, [isDevResult, rawDevData]);
+  const [remoteData, setRemoteData] = useState<ResultsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!responseId || isDevResult) {
+    if (!hasHydrated || !responseId || isDevResult) {
       return;
     }
 
@@ -157,10 +181,10 @@ export default function ResultsPage() {
     };
 
     void loadResults();
-  }, [isDevResult, isTestSession, responseId, sessionTokenId]);
+  }, [hasHydrated, isDevResult, isTestSession, responseId, sessionTokenId]);
 
   const data = isDevResult ? devData : remoteData;
-  const missingSessionToken = !isDevResult && !sessionTokenId;
+  const missingSessionToken = hasHydrated && !isDevResult && !sessionTokenId;
   const resolvedError =
     missingSessionToken
       ? "Sessione non valida. Riaccedi dal link ricevuto via email."
@@ -168,7 +192,7 @@ export default function ResultsPage() {
       ? "Nessun risultato dev trovato. Completa il questionario in modalità dev."
       : error;
 
-  if (!isDevResult && isLoading && !missingSessionToken) {
+  if (!hasHydrated || (!isDevResult && isLoading && !missingSessionToken)) {
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-accent-surface animate-spin" />
@@ -240,11 +264,12 @@ export default function ResultsPage() {
 
           <div className="w-full h-[300px] sm:h-[380px] md:h-[450px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
+              <RadarChart cx="50%" cy="50%" outerRadius="58%" data={chartData}>
                 <PolarGrid stroke="#3A3550" />
                 <PolarAngleAxis
                   dataKey="subject"
                   tick={{ fill: "#9490B8", fontSize: 11, fontWeight: 500 }}
+                  tickFormatter={(subject: string) => CHART_LABELS[subject] ?? subject}
                 />
                 <Radar
                   name={data.nome_attivita}
