@@ -34,6 +34,16 @@ Per il flusso completo server-side:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_PASSWORD` — password server-side per la dashboard `/admin`
+
+Per l'invio automatico dei link via email (facoltativo):
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL` — mittente verificato; default `noreply@fai-microimpresa.it`
+
+La creazione manuale dei token funziona anche senza Resend: la dashboard mostra
+il link personale da copiare e inviare. Le variabili di produzione vanno gestite
+su Vercel e richiedono un nuovo deployment dopo ogni modifica.
 
 In `dev mode` il questionario puo essere testato anche senza database.
 

@@ -13,6 +13,13 @@ export type AdminToken = {
   status: "unused" | "in_progress" | "completed";
 };
 
+export type CreateAdminTokenResult = {
+  token: AdminToken;
+  accessUrl: string;
+  emailSent: boolean;
+  warning?: string;
+};
+
 export async function GET(request: Request) {
   const authError = requireAdmin(request);
   if (authError) return authError;
@@ -31,10 +38,12 @@ export async function GET(request: Request) {
     let responseMap = new Map<string, { completed_at: string | null }>();
 
     if (tokenIds.length > 0) {
-      const { data: responses } = await supabase
+      const { data: responses, error: responsesError } = await supabase
         .from("fai_responses")
         .select("token_id, completed_at")
         .in("token_id", tokenIds);
+
+      if (responsesError) throw responsesError;
 
       responseMap = new Map(
         (responses ?? []).map((r) => [r.token_id as string, r])
@@ -73,14 +82,25 @@ export async function POST(request: Request) {
   if (authError) return authError;
 
   try {
-    const { notes, email } = (await request.json()) as {
+    const { notes, email, sendEmail } = (await request.json()) as {
       notes?: string;
       email?: string;
+      sendEmail?: boolean;
     };
 
-    if (!notes || !email) {
+    const normalizedNotes = notes?.trim();
+    const normalizedEmail = email?.trim().toLowerCase() || null;
+
+    if (!normalizedNotes) {
       return NextResponse.json(
-        { error: "Note ed email sono obbligatorie" },
+        { error: "Nome o note sono obbligatori" },
+        { status: 400 }
+      );
+    }
+
+    if (sendEmail && !normalizedEmail) {
+      return NextResponse.json(
+        { error: "Inserisci un indirizzo email per effettuare l'invio" },
         { status: 400 }
       );
     }
@@ -89,11 +109,12 @@ export async function POST(request: Request) {
 
     // Genera token con retry su collision
     let tokenRecord: AdminToken | null = null;
+    let lastInsertError: unknown = null;
     for (let i = 0; i < 5; i++) {
       const tokenValue = generateTokenValue();
       const { data, error } = await supabase
         .from("access_tokens")
-        .insert([{ token: tokenValue, notes, email }])
+        .insert([{ token: tokenValue, notes: normalizedNotes, email: normalizedEmail }])
         .select("id, token, notes, email, created_at, used_at, response_id")
         .single();
 
@@ -101,44 +122,70 @@ export async function POST(request: Request) {
         tokenRecord = { ...data, status: "unused" };
         break;
       }
+
+      lastInsertError = error;
+      if (error?.code !== "23505") throw error;
     }
 
     if (!tokenRecord) {
+      console.error("Admin token creation exhausted retries:", lastInsertError);
       return NextResponse.json({ error: "Errore interno" }, { status: 500 });
     }
 
-    // Invia email via Resend
-    const { Resend } = await import("resend");
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    if (!baseUrl) {
-      console.error("NEXT_PUBLIC_BASE_URL is not set");
-      return NextResponse.json({ error: "Configurazione server incompleta" }, { status: 500 });
+    const accessUrl = new URL("/start", request.url);
+    accessUrl.searchParams.set("token", tokenRecord.token);
+
+    let emailSent = false;
+    let warning: string | undefined;
+
+    if (sendEmail) {
+      const resendApiKey = process.env.RESEND_API_KEY;
+
+      if (!resendApiKey) {
+        warning = "Token creato, ma l'invio email non è ancora configurato.";
+        console.warn("Admin token email skipped: RESEND_API_KEY is not set");
+      } else {
+        try {
+          const { Resend } = await import("resend");
+          const resend = new Resend(resendApiKey);
+          const emailResult = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL ?? "noreply@fai-microimpresa.it",
+            to: normalizedEmail as string,
+            subject: "Il tuo accesso alla Diagnosi di solidità",
+            text: [
+              "Ciao,",
+              "hai richiesto l'accesso alla diagnosi gratuita per la tua attività.",
+              "",
+              "Clicca il link qui sotto per iniziare:",
+              accessUrl.toString(),
+              "",
+              "Il link è personale e può essere usato una sola volta.",
+              "",
+              "— Team Alvaland",
+            ].join("\n"),
+          });
+
+          if (emailResult.error) {
+            warning = "Token creato, ma l'email non è stata inviata.";
+            console.error("Admin token email failed:", emailResult.error);
+          } else {
+            emailSent = true;
+          }
+        } catch (emailError) {
+          warning = "Token creato, ma l'email non è stata inviata.";
+          console.error("Admin token email failed:", emailError);
+        }
+      }
     }
 
-    const emailResult = await resend.emails.send({
-      from: "noreply@fai-microimpresa.it",
-      to: email,
-      subject: "Il tuo accesso alla Diagnosi di solidità",
-      text: [
-        "Ciao,",
-        "hai richiesto l'accesso alla diagnosi gratuita per la tua attività.",
-        "",
-        "Clicca il link qui sotto per iniziare:",
-        `${baseUrl}/start?token=${tokenRecord.token}`,
-        "",
-        "Il link è personale e può essere usato una sola volta.",
-        "",
-        "— Team Alvaland",
-      ].join("\n"),
-    });
+    const result: CreateAdminTokenResult = {
+      token: tokenRecord,
+      accessUrl: accessUrl.toString(),
+      emailSent,
+      warning,
+    };
 
-    if (emailResult.error) {
-      console.error("Resend error:", emailResult.error);
-      return NextResponse.json({ error: "Errore invio email" }, { status: 500 });
-    }
-
-    return NextResponse.json({ token: tokenRecord }, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (err) {
     console.error("Admin tokens POST error:", err);
     return NextResponse.json({ error: "Errore interno" }, { status: 500 });

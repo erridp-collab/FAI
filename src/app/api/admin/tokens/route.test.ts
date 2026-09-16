@@ -19,7 +19,7 @@ const tokensSelect = vi.fn(() => ({ order: tokensOrder }));
 const responsesIn = vi.fn();
 const responsesSelect = vi.fn(() => ({ in: responsesIn }));
 
-const fromMock = vi.fn((table: string) => {
+const fromMock = vi.fn((table: string): unknown => {
   if (table === "access_tokens") return { select: tokensSelect };
   if (table === "fai_responses") return { select: responsesSelect };
   return {};
@@ -98,7 +98,6 @@ describe("GET /api/admin/tokens", () => {
 
   it("crea il token, lo salva in DB e invia l'email", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test_key");
-    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://fai-test.it");
 
     const insertSingle = vi.fn().mockResolvedValue({
       data: { id: "tok-new", token: "ALVA-NEWXXX", notes: "Nuovo", email: "nuovo@test.com", created_at: "2026-06-17T00:00:00Z", used_at: null, response_id: null },
@@ -110,7 +109,11 @@ describe("GET /api/admin/tokens", () => {
 
     const request = new Request("http://localhost/api/admin/tokens", {
       method: "POST",
-      body: JSON.stringify({ notes: "Nuovo", email: "nuovo@test.com" }),
+      body: JSON.stringify({
+        notes: "Nuovo",
+        email: "nuovo@test.com",
+        sendEmail: true,
+      }),
       headers: {
         "Content-Type": "application/json",
         cookie: "fai_admin_session=password-segreta",
@@ -118,10 +121,16 @@ describe("GET /api/admin/tokens", () => {
     });
 
     const response = await POST(request);
-    const body = (await response.json()) as { token?: { id: string } };
+    const body = (await response.json()) as {
+      token?: { id: string };
+      accessUrl?: string;
+      emailSent?: boolean;
+    };
 
     expect(response.status).toBe(201);
     expect(body.token?.id).toBe("tok-new");
+    expect(body.accessUrl).toBe("http://localhost/start?token=ALVA-NEWXXX");
+    expect(body.emailSent).toBe(true);
     expect(sendEmailMock).toHaveBeenCalledOnce();
     expect(sendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -129,5 +138,45 @@ describe("GET /api/admin/tokens", () => {
         subject: "Il tuo accesso alla Diagnosi di solidità",
       })
     );
+  });
+
+  it("crea un token manuale senza richiedere Resend o email", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+
+    const insertSingle = vi.fn().mockResolvedValue({
+      data: { id: "tok-manual", token: "ALVA-MANUAL", notes: "Cliente manuale", email: null, created_at: "2026-09-16T00:00:00Z", used_at: null, response_id: null },
+      error: null,
+    });
+    const insertSelect = vi.fn(() => ({ single: insertSingle }));
+    const insertMock = vi.fn(() => ({ select: insertSelect }));
+    fromMock.mockReturnValueOnce({ insert: insertMock });
+
+    const request = new Request("https://fai-two.vercel.app/api/admin/tokens", {
+      method: "POST",
+      body: JSON.stringify({ notes: "Cliente manuale", sendEmail: false }),
+      headers: {
+        "Content-Type": "application/json",
+        cookie: "fai_admin_session=password-segreta",
+      },
+    });
+
+    const response = await POST(request);
+    const body = (await response.json()) as {
+      token?: { id: string };
+      accessUrl?: string;
+      emailSent?: boolean;
+    };
+
+    expect(response.status).toBe(201);
+    expect(body.token?.id).toBe("tok-manual");
+    expect(body.accessUrl).toBe("https://fai-two.vercel.app/start?token=ALVA-MANUAL");
+    expect(body.emailSent).toBe(false);
+    expect(insertMock).toHaveBeenCalledWith([
+      expect.objectContaining({
+        notes: "Cliente manuale",
+        email: null,
+      }),
+    ]);
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 });
