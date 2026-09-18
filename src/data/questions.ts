@@ -230,7 +230,7 @@ export const mainQuestions: MainQuestion[] = [
     "labels": {
       "1": "no, non ho nulla di mio",
       "3": "ho un sito ma senza possibilità di prenotazione o acquisto diretto",
-      "5": "sì ho un sito aggiornato e con prenotazione/acquisto diretto"
+      "5": "sì ho un sito aggiornato e con prenotazione/\u200bacquisto diretto"
     }
   },
   {
@@ -434,7 +434,7 @@ export const mainQuestions: MainQuestion[] = [
     "labels": {
       "1": "intervengo solo quando qualcosa si rompe",
       "3": "programmo la manutenzione ma non in modo strutturato",
-      "5": "ho piano di manutenzione/ristrutturazione a lungo termine e lo seguo"
+      "5": "ho piano di manutenzione/\u200bristrutturazione a lungo termine e lo seguo"
     }
   },
   {
